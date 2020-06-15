@@ -11770,8 +11770,8 @@ locret_AA70:
 		rts
 AreaChangeTimerData:
 
-		.byte $A0
-		.byte $34
+		.byte $A1
+		.byte $35
 loc_AA73:
 
 		jsr sub_AA8D
