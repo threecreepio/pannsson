@@ -15704,99 +15704,23 @@ loc_C620:
 		rts
 
 TitleScreenData:
-		.byte $20, $84
-		.byte $01
-		.byte $44
-
-		.byte $20, $85
-		.byte $57
-		.byte $48
-
-		.byte $20, $9C
-		.byte $01
-		.byte $49
-
-		.byte $20, $A4
-		.byte $C9
-		.byte $46
-
-		.byte $20, $A5
-		.byte $57
-		.byte $26
-
-		.byte $20, $BC
-		.byte $C9
-		.byte $4A
-
-		.byte $20, $A5
-		.byte $0A
-		.byte $D0, $D1, $D8, $D8, $DE, $D1, $D0, $DA, $DE, $D1
-
-		.byte $20, $C5
-		.byte $17
-		.byte $D2, $D3, $DB, $DB, $DB, $D9, $DB, $DC
-		.byte $DB, $DF, $26, $26, $26, $26, $26, $26
-		.byte $26, $26, $26, $26, $26, $26, $26
-
-		.byte $20, $E5
-		.byte $17
-		.byte $D4, $D5, $D4, $D9, $DB, $E2, $D4, $DA
-		.byte $DB, $E0, $26, $26, $26, $26, $26, $26
-		.byte $26, $26, $26, $26, $26, $26, $26
-
-		.byte $21, $05
-		.byte $57
-		.byte $26
-
-		.byte $21, $05
-		.byte $0A
-		.byte $D6, $D7, $D6, $D7, $E1, $26, $D6, $DD, $E1, $E1
-		
-		.byte $21, $25
-		.byte $17
-		.byte $D0, $E8, $D1, $D0, $D1, $DE, $D1, $D8
-		.byte $D0, $D1, $26, $DE, $D1, $DE, $D1, $D0
-		.byte $D1, $D0, $D1, $26, $26, $D0, $D1
-
-		.byte $21, $45
-		.byte $17
-		.byte $DB, $42, $42, $DB, $42, $DB, $42, $DB
-		.byte $DB, $42, $26, $DB, $42, $DB, $42, $DB
-		.byte $42, $DB, $42, $26, $26, $DB, $42
-
-		.byte $21, $65
-		.byte $46
-		.byte $DB
-
-		.byte $21, $6B
-		.byte $11 
-		.byte $DF, $DB, $DB, $DB, $26, $DB, $DF, $DB
-		.byte $DF, $DB, $DB, $E4, $E5, $26, $26, $EC
-		.byte $ED
-
-		.byte $21, $85
-		.byte $17
-		.byte $DB, $DB, $DB, $DE, $43, $DB, $E0, $DB
-		.byte $DB, $DB, $26, $DB, $E3, $DB, $E0, $DB
-		.byte $DB, $E6, $E3, $26, $26, $EE, $EF
-
-		.byte $21, $A5
-		.byte $17
-		.byte $DB, $DB, $DB, $DB, $42, $DB, $DB, $DB
-		.byte $D4, $D9, $26, $DB, $D9, $DB, $DB, $D4
-		.byte $D9, $D4, $D9, $E7, $26, $DE, $DA
-
-		.byte $21, $C4
-		.byte $19
-		.byte $5F, $95, $95, $95, $95, $95, $95, $95
-		.byte $95, $97, $98, $78, $95, $96, $95, $95
-		.byte $97, $98, $97, $98, $95, $78, $95, $F0
-		.byte $7A
-
-		.byte $21, $EF
-		.byte $0E
-		.byte $CF, $01, $09, $08, $06, $24, $17, $12
-		.byte $17, $1D, $0E, $17, $0D, $18
+.byte $20,$85,$01,$44
+.byte $20,$86,$55,$48
+.byte $20,$9B,$01,$49
+.byte $20,$A5,$C9,$46
+.byte $20,$BB,$C9,$4A
+.byte $20,$A6,$15,$EC,$ED,$EE,$EF,$F3,$F4,$F5,$F6,$F7,$F8,$D0,$D1,$D8,$D8,$DE,$D1,$D0,$DA,$DE,$D1,$26
+.byte $20,$C6,$15,$26,$26,$26,$26,$26,$26,$26,$26,$26,$26,$D2,$D3,$DB,$DB,$DB,$D9,$DB,$DC,$DB,$DF,$26
+.byte $20,$E6,$15,$26,$26,$26,$26,$26,$26,$26,$26,$26,$26,$D4,$D5,$D4,$D9,$DB,$E2,$D4,$DA,$DB,$E0,$26
+.byte $21,$06,$55,$26
+.byte $21,$10,$0A,$D6,$D7,$D6,$D7,$E1,$26,$D6,$DD,$E1,$E1
+.byte $21,$26,$15,$D0,$E8,$D1,$D0,$D1,$DE,$D1,$D8,$D0,$D1,$26,$DE,$D1,$DE,$D1,$D0,$D1,$D0,$D1,$26,$26
+.byte $21,$46,$15,$DB,$42,$42,$DB,$E3,$DB,$E3,$DB,$DB,$E3,$26,$DB,$E3,$DB,$E3,$DB,$E3,$DB,$E3,$26,$26
+.byte $21,$66,$46,$DB,$21,$6C,$0F,$DF,$DB,$DB,$DB,$26,$DB,$DF,$DB,$DF,$DB,$DB,$D2,$E5,$26,$26
+.byte $21,$86,$15,$DB,$DB,$DB,$DE,$43,$DB,$DB,$DB,$DB,$DB,$26,$DB,$E3,$DB,$E3,$DB,$DB,$DB,$E3,$26,$26
+.byte $21,$A6,$15,$DB,$DB,$DB,$DB,$DB,$DB,$DB,$DB,$D4,$D9,$26,$DB,$D9,$DB,$DB,$D4,$D9,$D4,$D9,$DA,$26
+.byte $21,$C5,$17,$5F,$95,$95,$95,$95,$95,$95,$95,$95,$97,$98,$78,$95,$96,$95,$95,$97,$98,$97,$98,$95,$78,$7A
+.byte $21,$EE,$0E,$CF,$01,$09,$08,$06,$24,$17,$12,$17,$1D,$0E,$17,$0D,$18
 
 		.byte $23, $C9
 		.byte $47
@@ -15812,7 +15736,7 @@ TitleScreenData:
 
 		.byte $23, $CC
 		.byte $43
-		.byte $F5
+		.byte $55
 
 		.byte $23, $D6
 		.byte $01
