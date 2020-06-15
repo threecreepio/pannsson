@@ -15451,10 +15451,9 @@ TitleScreenMode:
 		.word FinalizeTitleScreen
 
 IsBigWorld:
-		.byte 1, 0, 1, 0
-		.byte 1, 1, 0, 0
-		.byte 0
-		.byte 1, 1, 0, 0
+.byte 1, 1, 0, 1, 0, 0, 1, 0
+.byte 0
+.byte 1, 1, 0, 0
 
 NoGoTime:
 		lda #0
