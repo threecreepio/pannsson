@@ -3620,6 +3620,12 @@ loc_773C:
 
 		tya
 		pha
+          
+		  lda AreaNumber
+          ora WorldNumber          ;if at world 1-1, do not add piranha plant ever
+          beq loc_774D
+
+
 		ldy AreaObjectLength,x
 		beq loc_774D
 		jsr FindEmptyEnemySlot
@@ -8113,11 +8119,8 @@ loc_939A:
 		sta TMP_1
 		lda IsPlayingExtendedWorlds
 		bne loc_93B2
-		lda WorldNumber
-		cmp #3
-		bcs loc_93B2
 		dec TMP_0
-		lda #$21
+		lda #$12
 		sta TMP_1
 loc_93B2:
 
