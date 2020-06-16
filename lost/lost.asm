@@ -6910,57 +6910,17 @@ locret_8C46:
 
 		rts
 LoopCmdWorldNumber:
-		.byte 2
-		.byte 2
-		.byte 2
-		.byte 2
-		.byte 5
-		.byte 5
-		.byte 5
-		.byte 5
-		.byte 6
-		.byte 7
-		.byte 7
-		.byte 4
+      .byte $03, $03, $06, $06, $06, $06, $06, $06, $07, $07
+
 LoopCmdPageNumber:
-		.byte 3
-		.byte 5
-		.byte 8
-		.byte 9
-		.byte 3
-		.byte 6
-		.byte 7
-		.byte $A
-		.byte 5
-		.byte 5
-		.byte $B
-		.byte 5
+      .byte $05, $09, $04, $05, $06, $08, $09, $0a, $05, $0b
+
 LoopCmdYPosition:
-		.byte $B0
-		.byte $B0
-		.byte $40
-		.byte $30
-		.byte $B0
-		.byte $30
-		.byte $B0
-		.byte $B0
-		.byte $F0
-		.byte $F0
-		.byte $B0
-		.byte $F0
+      .byte $b0, $40, $40, $40, $40, $40, $80, $80, $f0, $b0
+
 LoopCmdMultiLoopPassCntr:
-		.byte 2
-		.byte 2
-		.byte 2
-		.byte 2
-		.byte 2
-		.byte 2
-		.byte 2
-		.byte 2
-		.byte 1
-		.byte 1
-		.byte 1
-		.byte 1
+	.byte 1, 1, 3, 3, 3, 3, 3, 3, 1, 1
+
 sub_8C77:
 
 		lda Player_PageLoc
@@ -15596,18 +15556,7 @@ FDSResetZero:
 		rts
 
 SWAPDATA_AreaDataOfsLoopback:
-		.byte $C
-		.byte $C
-		.byte $42
-		.byte $42
-		.byte $10
-		.byte $10
-		.byte $30
-		.byte $30
-		.byte 6
-		.byte $C
-		.byte $54
-		.byte 6
+      .byte $12, $36, $0e, $0e, $0e, $32, $32, $32, $0a, $26, $40
 
 GameMenuRoutine_NEW:
 GameMenuRoutineInner_NEW:
