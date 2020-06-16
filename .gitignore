@@ -10,3 +10,5 @@ inc/wram.inc
 wram/full.bin
 lost/wram-init.bin
 test.*
+/*.ips
+/*.zip

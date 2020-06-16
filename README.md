@@ -1,3 +1,27 @@
+# Pannsson All Night Nippon Practise ROM
+
+This is a conversion of the fantastic Pellsson practice rom (https://github.com/pellsson/smb) allowing practise of the All Night Nippon variant of the game!
+
+Still quite buggy, work in progress.
+
+/threecreepio
+
+Download & Installation
+=======================
+
+First, download the latest patch from the [releases](https://github.com/threecreepio/pannsson/releases)
+
+Then apply that IPS (using for instance "Lunar IPS") to the original, unmodified version of the Super Mario Bros. (US/World) ROM. 
+
+The MD5 checksum for the ROM you should be using is `811b027eaf99c2def7b933c5208636de`.
+
+Have fun!
+
+
+
+
+
+
 # SMB & SMB2J Practice ROM
 
 A speedrun practice ROM for Super Mario Bros. and Super Mario Bros 2 - The Lost Levels.

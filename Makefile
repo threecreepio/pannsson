@@ -27,10 +27,16 @@ INCS = inc/wram.inc \
 
 GEN_SCENARIOS = scen/scenario_data.asm
 
-all: smb.nes
+all: pannsson.zip
 
 run: smb.nes
 	wine fceux/fceux.exe smb.nes
+
+pannsson.zip: patch.ips
+	zip $@ patch.ips README.md
+
+patch.ips: smb.nes
+	flips.exe --create --ips "original.nes" "smb.nes" $@
 
 smb.nes: smb.bin
 	cat ines.bin smb.bin > smb.nes
