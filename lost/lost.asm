@@ -872,112 +872,122 @@ WorldLivesDisplay:
 OnePlayerTimeUp:
 		.byte $22, $0C, $07, $1D, $12, $16, $0E, $24, $1E, $19
 		.byte $FF
+
+
+
+
+
+
+
+
+		
 WarpZoneWelcome:
-		.byte $25
-		.byte $84
-		.byte $15
-		.byte $20
-		.byte $E
-		.byte $15
-		.byte $C
-		.byte $18
-		.byte $16
-		.byte $E
-		.byte $24
-		.byte $1D
-		.byte $18
-		.byte $24
-		.byte $20
-		.byte $A
-		.byte $1B
-		.byte $19
-		.byte $24
-		.byte $23
-		.byte $18
-		.byte $17
-		.byte $E
-		.byte $2B
-		.byte $26
-		.byte $2D
-		.byte 1
-		.byte $24
-		.byte $27
-		.byte $D9
-		.byte $46
-		.byte $AA
-		.byte $27
-		.byte $E1
-		.byte $45
-		.byte $AA
-		.byte 0
+  .byte $25, $84, $15, $20, $0e, $15, $0c, $18, $16 ; "WELCOME TO WARP ZONE!"
+  .byte $0e, $24, $1d, $18, $24, $20, $0a, $1b, $19
+  .byte $24, $23, $18, $17, $0e, $2b
+  .byte $26, $25, $01, $24         ; placeholder for left pipe
+  .byte $26, $2d, $01, $24         ; placeholder for middle pipe
+  .byte $26, $35, $01, $24         ; placeholder for right pipe
+  .byte $27, $d9, $46, $aa         ; attribute data
+  .byte $27, $e1, $45, $aa
+  .byte $ff
 
 WarpZoneNumbers:
-		.byte 2
-		.byte 3
-		.byte 4
-		.byte 1
-		.byte 6
-		.byte 7
-		.byte 8
-		.byte 5
-		.byte $B
-		.byte $C
-		.byte $D
+  .byte $04, $03, $02, $00         ; warp zone numbers, note spaces on middle
+  .byte $24, $05, $24, $00         ; zone, partly responsible for
+  .byte $08, $07, $06, $00         ; the minus world
+  .byte $B, $C, $0, $D
+
 
 GameTextOffsets:
-		.byte 0
-		.byte WorldLivesDisplay-GameText
-		.byte OnePlayerTimeUp-GameText
-		.byte 0 ;??
+	.byte 0
+	.byte WorldLivesDisplay-GameText
+	.byte OnePlayerTimeUp-GameText
+	.byte 0
+	.byte WarpZoneWelcome-GameText
 
 WriteGameText_NEW:
-		pha
-		tay
-		ldx GameTextOffsets,y
-		ldy #0
-loc_6722:
-		lda GameText,x
-		cmp #$FF
-		beq loc_6730
-		sta $301,y
-		inx
-		iny
-		bne loc_6722
-loc_6730:
-		lda #0
-		sta $301,y
-		sty VRAM_Buffer1_Offset
-		pla
-		beq EndOfWriteGameText
-		tax
-		dex
-		bne EndOfWriteGameText
-		lda #$CE
-		sta byte_309
-		jsr GetWorldNumber
-		sta byte_314
-		ldy LevelNumber
-		iny
-		sty byte_316
-EndOfWriteGameText:
-		rts
+               pha                      ;save text number to stack
+               tay
+               cpy #$01                 ;if set to do top status bar or world/lives display,
+               bcc LdGameText           ;branch to use current offset as-is
+               cpy #$04                 ;if set to do time-up or game over,
+               bcc LdGameText           ;branch to check players
+               ldy #$04                 ;otherwise warp zone, therefore set offset
+LdGameText:    ldx GameTextOffsets,y    ;get offset to message we want to print
+               ldy #0
+GameTextLoop:  lda GameText,x           ;load message data
+               cmp #$ff                 ;check for terminator
+               beq EndGameText          ;branch to end text if found
+WriteTextByte:
+               sta VRAM_Buffer1,y       ;otherwise write data to buffer
+               inx
+               iny
+               bne GameTextLoop         ;do this for 256 bytes if no terminator found
+EndGameText:   lda #$00                 ;put null terminator at end
+               sta VRAM_Buffer1,y
+               sty VRAM_Buffer1_Offset
+               pla                      ;pull original text number from stack
+               tax
+               cmp #$02                 ;are we printing warp zone?
+               bcs PrintWarpZoneNumbers
+               dex                      ;are we printing the world/lives display?
+               bne WriteTextDone      ;if not, branch to check player's name
+               lda #$ce
+PutLives:      sta VRAM_Buffer1+7
+               ldy WorldNumber          ;write world and level numbers (incremented for display)
+               iny                      ;to the buffer in the spaces surrounding the dash
+               sty VRAM_Buffer1+19
+               ldy LevelNumber
+               iny
+               sty VRAM_Buffer1+21      ;we're done here
+WriteTextDone:
+               rts
 
-sub_675E:
-		pha
-		ldy #$FF
-loc_6761:
-		iny
-		lda WarpZoneWelcome,y
-		sta $301,y
-		bne loc_6761
-		pla
-		sec
-		sbc #$80
-		tax
-		lda WarpZoneNumbers,x
-		sta byte_31C
-		lda #$24
-		jmp SetVRAMOffset
+PrintWarpZoneNumbers:
+             sbc #$04               ;subtract 4 and then shift to the left
+             asl                    ;twice to get proper warp zone number
+             asl                    ;offset
+			tax
+
+			lda IsPlayingExtendedWorlds
+			ldy IsPlayingExtendedWorlds
+			beq @WarpLoop
+			adc #9
+			adc WorldNumber
+			adc AreaNumber
+			tax
+			lda WarpZoneNumbers,x  ;print warp zone number into the placeholder
+			sta VRAM_Buffer1+27+4
+			ldy #2
+			jmp @exit
+@WarpLoop:
+			ldy #$00
+@WarpNumLoop: lda WarpZoneNumbers,x  ;print warp zone numbers into the
+             sta VRAM_Buffer1+27,y  ;placeholders from earlier
+             inx
+             iny                    ;put a number in every fourth space
+             iny
+             iny
+             iny
+             cpy #$0c
+             bcc @WarpNumLoop
+@exit:
+             lda #$2c               ;load new buffer pointer at end of message
+             jmp SetVRAMOffset
+
+;-------------------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
 ResetSpritesAndScreenTimer:
 
 		lda ScreenTimer
@@ -3247,65 +3257,29 @@ loc_750F:
 
 		sta ForegroundScenery
 		rts
+
+
+
+
 XXX_ScrollLockObject_Warp_RW_POSS:
+ScrollLockObject_Warp:
+         ldx #$04            ;load value of 4 for game text routine as default
+         lda WorldNumber     ;warp zone (4-3-2), then check world number
+         beq WarpNum
+         inx                 ;if world number > 1, increment for next warp zone (5)
+         ldy AreaType        ;check area type
+         dey
+         bne WarpNum         ;if ground area type, increment for last warp zone
+         inx                 ;(8-7-6) and move on
+WarpNum: txa
+         sta WarpZoneControl ;store number here to be used by warp zone routine
+         jsr WriteGameText_NEW   ;print text and warp zone numbers
+         lda #PiranhaPlant
+         jsr sub_756D     ;load identifier for piranha plants and do sub
 
-		ldx #$80
-		lda IsPlayingExtendedWorlds
-		bne loc_752F
-		lda WorldNumber
-		bne loc_7537
-		ldy AreaType
-		dey
-		beq loc_752B
-		lda AreaAddrsLOffset
-		beq loc_752C
-		inx
-loc_752B:
 
-		inx
-loc_752C:
 
-		jmp loc_7558
-loc_752F:
 
-		lda #$87
-		clc
-		adc LevelNumber
-		bne loc_7559
-loc_7537:
-
-		ldx #$83
-		lda WorldNumber
-		cmp #2
-		beq loc_7558
-		inx
-		cmp #4
-		bne loc_7555
-		lda AreaAddrsLOffset
-		cmp #$B
-		beq loc_7558
-		ldy AreaType
-		dey
-		beq loc_7556
-		jmp loc_7557
-loc_7555:
-
-		inx
-loc_7556:
-
-		inx
-loc_7557:
-
-		inx
-loc_7558:
-
-		txa
-loc_7559:
-
-		sta WarpZoneControl
-		jsr sub_675E
-		lda #$D
-		jsr sub_756D
 ScrollLockObject:
 
 		lda ScrollLock

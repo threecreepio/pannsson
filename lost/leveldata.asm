@@ -17,47 +17,75 @@ NonMaskableInterrupt:
 Start:
 	rti ; TODO this is dumb as shit.
 
-WarpZoneNumbers:
-		.byte 2
-		.byte 3
-		.byte 4
-		.byte 1
-		.byte 6
-		.byte 7
-		.byte 8
-		.byte 5
-		.byte $B
-		.byte $C
-		.byte $D
-
 LoadWarpzone:
-		lda WarpZoneControl
-		and #$F
-		tax
-		lda WarpZoneNumbers,x
-		ldy IsPlayingExtendedWorlds ; todo
-		beq @isnot
-		sec
-		sbc #9
-@isnot:
-		tay
-		dey
-		sty WorldNumber
-		ldx WorldAddrOffsets,y
-		lda AreaAddrOffsets,x
-		sta AreaPointer
-		sta WRAM_LevelAreaPointer
-		lda #$80
-		sta EventMusicQueue
-		PF_SetToLevelEnd_A
-		lda #0
-		sta EntrancePage
-		sta AreaNumber
-		sta LevelNumber
-		sta AltEntranceControl
-		inc Hidden1UpFlag
-		inc FetchNewGameTimerFlag
-		jmp ReturnBank
+	lda WarpZoneControl
+	and #$F
+
+	ldy IsPlayingExtendedWorlds ; todo
+	bne LoadWarpzoneExt
+
+LoadWarpzoneStd:
+	tax
+	and #%00000011            ;mask out all but 2 LSB
+	asl
+	asl                       ;multiply by four
+	tax                       ;save as offset to warp zone numbers (starts at left pipe)
+	lda Player_X_Position     ;get player's horizontal position
+	cmp #$60
+	bcc @GetWNum               ;if player at left, not near middle, use offset and skip ahead
+	inx                       ;otherwise increment for middle pipe
+	cmp #$a0
+	bcc @GetWNum               ;if player at middle, but not too far right, use offset and skip
+	inx                       ;otherwise increment for last pipe
+@GetWNum:
+	lda WarpZoneNumbers,x
+	tay
+	dey
+	sty WorldNumber
+	ldx WorldAddrOffsets,y
+	lda AreaAddrOffsets,x
+	sta AreaPointer
+	sta WRAM_LevelAreaPointer
+	lda #$80
+	sta EventMusicQueue
+	PF_SetToLevelEnd_A
+	lda #0
+	sta EntrancePage
+	sta AreaNumber
+	sta LevelNumber
+	sta AltEntranceControl
+	inc Hidden1UpFlag
+	inc FetchNewGameTimerFlag
+	jmp ReturnBank
+
+
+LoadWarpzoneExt:
+	lda #9
+	adc WorldNumber
+	adc AreaNumber
+	tax
+	lda WarpZoneNumbers,x
+	tay
+	dey
+	sty WorldNumber
+	ldx WorldAddrOffsetsExt,y
+	lda AreaAddrOffsetsExt,x
+	sta AreaPointer
+	sta WRAM_LevelAreaPointer
+	lda #$80
+	sta EventMusicQueue
+	PF_SetToLevelEnd_A
+	lda #0
+	sta EntrancePage
+	sta AreaNumber
+	sta LevelNumber
+	sta AltEntranceControl
+	inc Hidden1UpFlag
+	inc FetchNewGameTimerFlag
+	jmp ReturnBank
+
+
+
 
 LoadAreaPointer:
 		jsr LoadAreaPointerInner
@@ -65,6 +93,17 @@ LoadAreaPointer:
 
 LoadAreaPointerInner:
 		ldy WorldNumber
+		lda IsPlayingExtendedWorlds
+		beq @load_normal
+		; FindAreaPointerEx
+		lda WorldAddrOffsetsExt,y
+		clc
+		adc AreaNumber
+		tay
+		lda AreaAddrOffsetsExt,y
+		; /FindAreaPointer
+		jmp @finalize
+@load_normal:
 		; FindAreaPointer
 		lda WorldAddrOffsets,y
 		clc
@@ -223,8 +262,11 @@ WriteHalfwayPages:
 		jmp ReturnBank
 
 GetAreaDataAddrsNormal:
-GetAreaDataAddrsEx:
 		CreateGetAreaDataAddrs EnemyAddrHOffsets, EnemyDataAddrLow, AreaDataHOffsets, AreaDataAddrLow
+		jmp ReturnBank
+
+GetAreaDataAddrsEx:
+		CreateGetAreaDataAddrs EnemyAddrHOffsetsExt, EnemyDataAddrLowExt, AreaDataHOffsetsExt, AreaDataAddrLowExt
 		jmp ReturnBank
 
 GetAreaDataAddrs:
@@ -233,6 +275,12 @@ GetAreaDataAddrs:
 		jmp GetAreaDataAddrsEx
 @load_normal:
 		jmp GetAreaDataAddrsNormal
+
+WarpZoneNumbers:
+.byte $04, $03, $02, $00         ; warp zone numbers, note spaces on middle
+.byte $24, $05, $24, $00         ; zone, partly responsible for
+.byte $08, $07, $06, $00         ; the minus world
+.byte $2, $3, $0, $4
 
 HalfwayPageNybbles:
 .byte $56, $40
