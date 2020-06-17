@@ -11900,7 +11900,7 @@ HandlePipeEntry:
 		lda TMP_1
 		cmp #$10
 		bne locret_ABD3
-		lda #$30
+		lda #$31
 		sta ChangeAreaTimer
 		lda #3
 		sta GameEngineSubroutine
