@@ -8138,7 +8138,7 @@ InitJumpGPTroopa:
 
 		lda #2
 		sta Enemy_MovingDir,x
-		lda #$F4
+		lda #$f8
 		sta Enemy_X_Speed,x
 TallBBox2:
 
