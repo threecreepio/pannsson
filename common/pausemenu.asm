@@ -23,6 +23,8 @@ pm_hero_mario_row:
 	.byte $24, " HERO  MARIO", $24, $24, $24
 pm_hero_luigi_row:
 	.byte $24, " HERO  LUIGI", $24, $24, $24
+pm_hero_peach_row:
+	.byte $24, " HERO  PEACH", $24, $24, $24
 
 pm_show_rule_row:
 	.byte $24, " SHOW  RULE ", $24, $24, $24
@@ -105,6 +107,11 @@ _draw_pm_row_2:
 		rts
 
 _draw_pm_row_3:
+		lda WRAM_IsContraMode
+		beq @checkplayer
+		row_render_data $20E0, pm_hero_peach_row
+		rts
+@checkplayer:
 		row_render_data $20E0, pm_hero_mario_row
 		lda CurrentPlayer
 		beq @is_mario
@@ -438,6 +445,10 @@ pm_toggle_size:
 		jmp playerstatus_to_savestate
 
 pm_toggle_hero:
+		lda WRAM_IsContraMode
+		beq @okchange
+		rts
+@okchange:
 		lda CurrentPlayer
 		eor #1
 		sta CurrentPlayer
@@ -647,6 +658,7 @@ RunPauseMenu:
 		and #$81
 		ora $00
 		sta GamePauseStatus
+		rts
 @draw_cursor:
 		lda WRAM_MenuIndex
 		asl
@@ -662,9 +674,13 @@ RunPauseMenu:
 		lda #$04
 		sta $2FF
 
+		lda LastInputBits
+		bne @no_input
 		lda SavedJoypad1Bits
+		ora JoypadBitMask
 		cmp LastInputBits
 		bne @input_changed
+@no_input:
 		rts
 @input_changed:
 		cmp #Select_Button

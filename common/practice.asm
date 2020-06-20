@@ -473,6 +473,11 @@ GetSelectedValue:
 		lda PowerUps
 		rts
 @get_player:
+		lda WRAM_IsContraMode ;
+		beq @not_peach
+		lda #$19
+		rts
+@not_peach:
 		lda #$16 ; M
 		sec
 		sbc CurrentPlayer ; M / L
@@ -701,8 +706,11 @@ menu_input:
 		adc $00
 		and #$03
 		sta PowerUps
+@keep_peach:
 		rts
 @hero_selected:
+		lda WRAM_IsContraMode
+		bne @keep_peach
 		lda CurrentPlayer
 		clc
 		adc $01
@@ -1430,9 +1438,9 @@ RedrawSockTimer:
 		jmp RedrawFrameNumbers
 
 MagicByte0 = $70 ; P
-MagicByte1 = $65 ; E
-MagicByte2 = $36 ; 6
-MagicByte3 = $30 ; 0
+MagicByte1 = $56 ; V
+MagicByte2 = $35 ; 5
+MagicByte3 = $35 ; 5
 
 ValidWRAMMagic:
 		lda WRAM_Magic+0

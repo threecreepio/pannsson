@@ -28,7 +28,9 @@ A speedrun practice ROM for Super Mario Bros. and Super Mario Bros 2 - The Lost 
 
 For feature requests or bug reports, please visit the [issue tracker](https://github.com/pellsson/smb/issues).
 
-## Major Version 5 (Current 5.4)
+Looking to practice on PAL? [Try out threecreepio's independent PAL-conversion.](https://github.com/threecreepio/pallsson)
+
+## Major Version 5 (Current 5.5)
 
 ### New Features 
 - Ability to **wipe SMB/LL/LL-EXT records** under settings.
@@ -41,6 +43,11 @@ For feature requests or bug reports, please visit the [issue tracker](https://gi
 - Added **Frame Advance**. Set `SLOMO` in pause menu to `ADV`. To advance frame, press **A** on **controller two**. **If you dont have two controllers you will softlock :)**
 
 ### Bug Fixes
+- 5.5 bug fixes
+	- Fixed bug where early input to pause menu would overflow ppubuffer.
+	- Fixed bugs relating to running it on physical carts.
+	- Fixed bugs relating to save states.
+	- Updated faces to reflect new leader board.
 - 5.4 bug fixes
 	- When starting on a specific rule in Lost Levels the frame counter was set incorrectly, which could cause rule-deviations vs. vanilla.
 	- Use the coin-sprite for sprite0 (no more glitchy garbage under the coin).
@@ -98,7 +105,7 @@ save in Zelda (without savestates), power off the system, and load (without usin
 
 First download the desired version below:
 
-- [Version 5.4 - IPS](https://github.com/pellsson/smb/raw/master/smb-v5.4.ips)
+- [Version 5.5 - IPS](https://github.com/pellsson/smb/raw/master/smb-v5.5.ips)
 
 Then simply apply that IPS (using for instance Lunar IPS) to the an original, unmodified version of the Super Mario Bros. (US/World) ROM. *DO NOT* use The Lost Levels. The MD5 checksum for the ROM you should be using is `811b027eaf99c2def7b933c5208636de`.
 
@@ -112,15 +119,5 @@ Then simply apply that IPS (using for instance Lunar IPS) to the an original, un
 
 Have fun!
 
-<!-- Global site tag (gtag.js) - Google Analytics -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=UA-147548917-1"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'UA-147548917-1');
-</script>
-
-
-
+## Credits
+Sprites for peach shamelessly stolen from [Super Mario Bros.: Peach Edition](https://www.romhacking.net/hacks/1229)

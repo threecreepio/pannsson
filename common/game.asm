@@ -35,6 +35,11 @@ mario_colors:
 		.byte $3F, $11, $03, $30, $27, $19, $00 ; luigi
 		.byte $3F, $11, $03, $37, $27, $16, $00 ; fiery
 
+mario_colors_peach:
+		.byte $3F, $11, $03, $16, $27, $30, $00 ; peach
+		.byte $3F, $11, $03, $30, $27, $19, $00 ; not-used (but offset is ;) hack fuck.
+		.byte $3F, $11, $03, $16, $27, $37, $00 ; fiery
+
 mario_gfx:
 		.byte $c0, $32, $00, $A0
 		.byte $c0, $33, $00, $A8
@@ -61,7 +66,13 @@ SetMarioPalette:
 		bne @draw_pal
 		ldx #$0E
 @draw_pal:
+		lda WRAM_IsContraMode
+		beq @normal
+		lda mario_colors_peach, x
+		jmp @write_it 
+@normal:
 		lda mario_colors, x
+@write_it:
 		sta VRAM_Buffer1, y
 		beq @copy_done
 		inx
