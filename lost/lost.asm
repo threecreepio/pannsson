@@ -4146,13 +4146,14 @@ GameMode:
 		jsr JumpEngine
 		.word LoadCorrectData
 		.word InitializeArea
+		.word Increase_OperMode_Task
 		.word ScreenRoutines
 		.word SecondaryGameSetup
 		.word GameCoreRoutine_RW
 GameCoreRoutine_RW:
 		jsr GameRoutines
 		lda OperMode_Task
-		cmp #4
+		cmp #5
 		bcs GameEngine
 		rts
 
@@ -11721,8 +11722,8 @@ locret_AA70:
 		rts
 AreaChangeTimerData:
 
-		.byte $A1
-		.byte $35
+		.byte $A0
+		.byte $34
 loc_AA73:
 
 		jsr sub_AA8D
@@ -11914,7 +11915,7 @@ HandlePipeEntry:
 		lda TMP_1
 		cmp #$10
 		bne locret_ABD3
-		lda #$31
+		lda #$30
 		sta ChangeAreaTimer
 		lda #3
 		sta GameEngineSubroutine
