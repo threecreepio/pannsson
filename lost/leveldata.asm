@@ -131,7 +131,6 @@ GetAreaType:
 		lda AreaPointer
 		and #$1F
 		sta AreaAddrsLOffset
-		sty $6AFF
 		lda enemy_hoff,y
 		clc
 		adc AreaAddrsLOffset
@@ -147,7 +146,6 @@ GetAreaType:
 		adc AreaAddrsLOffset
 		asl
 		tay
-		sty $6AFE
 		lda area_data+1,y
 		sta AreaDataHigh
 		lda area_data,y
@@ -287,9 +285,9 @@ HalfwayPageNybbles:
 .byte $65, $70
 .byte $66, $40
 .byte $66, $40
-.byte $66, $40
 .byte $66, $60
-.byte $65, $70
+.byte $66, $60
+.byte $67, $80
 .byte $00, $00
 
 WorldAddrOffsets:
