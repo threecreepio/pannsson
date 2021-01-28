@@ -15397,6 +15397,9 @@ TitleScreenMode:
 		jsr JumpEngine
 		.word TitleInitializeFdsLoads
 		.word PrepareDrawTitleScreen
+		.word Increase_OperMode_Task
+		.word Increase_OperMode_Task
+		.word Increase_OperMode_Task
 		.word ScreenRoutines
 		.word PrimaryGameSetup
 		.word RunTitleScreen
@@ -15417,7 +15420,7 @@ NoGoTime:
 RunTitleScreen:
 		jsr Enter_PracticeTitleMenu
 		lda OperMode_Task
-		cmp #5
+		cmp #8
 		bne NoGoTime
 		ldx LevelNumber
 		ldy WorldNumber
