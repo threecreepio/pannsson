@@ -11374,6 +11374,20 @@ loc_A844:
 		txa
 loc_A860:
 
+		; NIPPON
+        pha
+        lda     Player_Y_HighPos
+        cmp     #$01
+        bne     nip_ypos_change
+        lda     Player_Y_Position
+        cmp     #$DF
+        bcc     nip_ypos_change
+        pla
+        rts
+nip_ypos_change:
+        pla
+		; END NIPPON
+
 		ldx ObjectOffset
 		sta $3A2,x
 		lda #0
