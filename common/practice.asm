@@ -706,6 +706,16 @@ menu_input:
 		and #$07
 		jmp @save_world
 @world_lost:
+		cmp #$08
+		bne @continue
+		lda $0
+		cmp #1 ; going right
+		bne @W9R
+		lda #$09
+		jmp @continue
+@W9R:
+		lda #$07
+@continue:
 		cmp #$0D
 		bcc @save_world
 		lda $0
