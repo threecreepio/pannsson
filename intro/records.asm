@@ -126,10 +126,10 @@ org_name:
 		.byte "SUPER MARIO BROS.         "
 		.byte 0
 lost_name:
-		.byte "SMB 2: THE LOST LEVELS    "
+		.byte "ALL NIGHT NIPPON          "
 		.byte 0
 ext_name:
-		.byte "SMB 2: THE LOST LEVELS EXT"
+		.byte "ALL NIGHT NIPPON EXT      "
 		.byte 0
 
 world_string:

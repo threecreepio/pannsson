@@ -1,3 +1,18 @@
+MMC5_PRGMode          = $5100
+MMC5_CHRMode          = $5101
+MMC5_RAMProtect1      = $5102
+MMC5_RAMProtect2      = $5103
+MMC5_ExRamMode        = $5104
+MMC5_Nametables       = $5105
+MMC5_FillTile         = $5106
+MMC5_CHRBank          = $5120
+MMC5_PRGBank          = $5113
+MMC5_VSplitMode       = $5200
+MMC5_VSplitScroll     = $5201
+MMC5_VSplitBank       = $5202
+MMC5_SLCompare        = $5203
+MMC5_SLIRQ            = $5204
+MMC5_ExRamOfs         = $3C00
 	.org $8000
 
 	.segment "bank7"
@@ -108,160 +123,149 @@ VRAM_Buffer_Offset:
 		.byte 0
 		.byte $40
 
-MACRO_ThrowFrameImpl
-
 NonMaskableInterrupt:
-		lda Mirror_PPU_CTRL_REG1
-		and #$7E
-		sta Mirror_PPU_CTRL_REG1
-		sta PPU_CTRL_REG1
-		; sei
-		lda Mirror_PPU_CTRL_REG2
-		and #$E6
-		ldy DisableScreenFlag
-		bne ScreenOff
-		lda Mirror_PPU_CTRL_REG2
-		ora #$1E
-ScreenOff:
-		sta Mirror_PPU_CTRL_REG2
-		and #$E7
-		sta PPU_CTRL_REG2
-		ldx PPU_STATUS
-		lda #0
-		jsr InitScroll
+   lda Mirror_PPU_CTRL_REG1      ;alter name table address to be $2800
+   and #%01111110            ;(essentially $2000) and disable another NMI
+   sta Mirror_PPU_CTRL_REG1       ;from interrupting this one
+   sta PPU_CTRL_REG1
+   sei
+   ldy DisableScreenFlag
+   bne SkipIRQ
+   lda IRQUpdateFlag
+   beq SkipIRQ
+   lda #30                   ;set interrupt scanline
+   sta MMC5_SLCompare
+   inc IRQAckFlag            ;reset flag to wait for next IRQ
+   lda #$80
+   sta MMC5_SLIRQ            ;reset IRQ
+SkipIRQ:
+   lda Mirror_PPU_CTRL_REG2
+   and #%11100110            ;disable OAM and background display by default
+   ldy DisableScreenFlag     ;if screen disabled, skip this
+   bne ScrnSwch
+   lda Mirror_PPU_CTRL_REG2       ;otherwise reenable bits and save them
+   ora #%00011110
+ScrnSwch:
+   sta Mirror_PPU_CTRL_REG2
+   and #%11100111            ;turn screen off regardless of mirror reg
+   sta PPU_CTRL_REG2
+   ldx PPU_STATUS
+   lda #$00
+   jsr InitScroll
+   lda #0
+   sta PPU_SPR_ADDR
+   lda #$02                  ;dump OAM data to PPU's sprite RAM
+   sta SPR_DMA
 
-		MACRO_RunSlowMo 4
-
-		lda #0
-		sta PPU_SPR_ADDR
-		lda #2
-		sta SPR_DMA
-
-		lda WRAM_PracticeFlags
-		and #PF_EnableInputDisplay
-		beq DrawBuffer
-		lda #<WRAM_StoredInputs
-		sta TMP_0
-		lda #>WRAM_StoredInputs
-		sta TMP_1
-		jsr UpdateScreen
+   lda WRAM_PracticeFlags
+   and #PF_EnableInputDisplay
+   beq DrawBuffer
+   lda #<WRAM_StoredInputs
+   sta TMP_0
+   lda #>WRAM_StoredInputs
+   sta TMP_1
+   jsr UpdateScreen
 DrawBuffer:
-		lda VRAM_Buffer_AddrCtrl
-		asl
-		tax
-		ldy #0
-		lda VRAM_AddrTable_DW_NEW,x
-		sta TMP_0
-		inx
-		lda VRAM_AddrTable_DW_NEW,x
-		sta TMP_1
-		jsr UpdateScreen
-		ldy #0
-		ldx VRAM_Buffer_AddrCtrl
-		cpx #6
-		bne InitBuffer
-		iny
-InitBuffer:
-		ldx VRAM_Buffer_Offset,y
-		lda #0
-		sta VRAM_Buffer1_Offset,x
-		sta VRAM_Buffer1,x
-		sta VRAM_Buffer_AddrCtrl
-		lda Mirror_PPU_CTRL_REG2
-		sta PPU_CTRL_REG2
+   lda VRAM_Buffer_AddrCtrl
+   asl
+   tax
+   lda VRAM_AddrTable_DW_NEW,x      ;get pointer to VRAM data
+   sta $00
+   inx
+   lda VRAM_AddrTable_DW_NEW,x
+   sta $01
+   jsr UpdateScreen          ;now update the screen with it
+   ldy #$00
+   ldx VRAM_Buffer_AddrCtrl
+   cpx #$06                  ;if pointer number was set to 6 (for
+   bne InitVRAMVars          ;second VRAM buffer), increment Y to get
+   iny                       ;offset for second VRAM buffer
+InitVRAMVars:
+   ldx VRAM_Buffer_Offset,y  ;get pointer to correct buffer offset
+   lda #$00                  ;erase the VRAM buffer offset, init first VRAM buffer
+   sta VRAM_Buffer1_Offset,x ;by writing end terminator at the first byte, and
+   sta VRAM_Buffer1,x        ;init address control to point at first VRAM buffer
+   sta VRAM_Buffer_AddrCtrl
+   lda Mirror_PPU_CTRL_REG2
+   sta PPU_CTRL_REG2              ;dump PPU control register 2
+   cli
 
-		jsr Enter_PracticeOnFrame
+   jsr Enter_PracticeOnFrame
 
-		lda GamePauseStatus
-		and #3
-		bne PauseSkip
-		lda TimerControl
-		beq DecTimers
-		dec TimerControl
-		bne NoDecTimers
-DecTimers:
-		ldx #$14
-		dec IntervalTimerControl
-		bpl DecTimersLoop
-		lda #$14
-		sta IntervalTimerControl
-		ldx #$23
-DecTimersLoop:
-
-		lda SelectTimer,x
-		beq SkipExpTimer
-		dec SelectTimer,x
-SkipExpTimer:
-		dex
-		bpl DecTimersLoop
-		jsr Enter_UpdateFrameRule
-NoDecTimers:
-		inc FrameCounter
-		jsr AdvanceRandom
+   lda GamePauseStatus       ;check for pause status
+   and #3
+   bne PauseSkip
+   lda TimerControl          ;if master timer control not set, branch
+   beq CheckIntervalTC       ;to decrement frame and interval timers
+   dec TimerControl          ;otherwise count this timer down
+   bne IncFrameCntr                 
+CheckIntervalTC:
+   ldx #$14                  ;set offset to decrement only frame timers
+   dec IntervalTimerControl  ;if interval timer control not expired, branch
+   bpl DecrTheTimers         ;to skip and thus decrement only frame timers
+   lda #$14
+   sta IntervalTimerControl  ;otherwise reset interval timer control to 20 frames
+   ldx #$23                  ;and load offset to decrement frame and interval timers
+DecrTheTimers:
+   lda Timers,x              ;if current timer is already expired, skip it
+   beq DTTLoop               ;otherwise decrement it
+   dec Timers,x
+DTTLoop:
+   dex                       ;loop until all timers that need to be counted down are
+   bpl DecrTheTimers
+   lda IntervalTimerControl
+   cmp #$14
+   bne IncFrameCntr
+   jsr Enter_UpdateFrameRule
+IncFrameCntr:
+   inc FrameCounter
+SeedLFSR:
+   ldx #$00
+   ldy #$07
+   lda PseudoRandomBitReg    ;get d1 of first byte
+   and #$02
+   sta $00
+   lda PseudoRandomBitReg+1  ;get d1 of second byte, XOR it with the first byte
+   and #$02
+   eor $00
+   clc
+   beq RotateLFSR            ;prepare to rotate the result in
+   sec
+RotateLFSR:
+   ror PseudoRandomBitReg,x  ;basically, rotate the operation result into d7
+   inx                       ;then rotate the entire LFSR
+   dey
+   bne RotateLFSR
 PauseSkip:
-		lda GamePauseStatus
-		and #$02
-		bne SkipSprite0
-		;
-		; hack begins
-		;
-		lda Sprite0HitDetectFlag
-		beq SkipSprite0
-Sprite0Clr:
-		lda PPU_STATUS
-		and #$40
-		bne Sprite0Clr
-		lda GamePauseStatus
-		and #3
-		bne Sprite0Hit
-		jsr MoveSpritesOffscreen
-		jsr SpriteShuffler
-Sprite0Hit:
-		lda PPU_STATUS
-		and #$40
-		beq Sprite0Hit
-		ldy #$14
-HBlankDelay:
-		dey
-		bne HBlankDelay
-SkipSprite0:
-		lda HorizontalScroll
-		sta PPU_SCROLL_REG
-		lda VerticalScroll
-		sta PPU_SCROLL_REG
-		;
-		; XXX - In smb2j-fds, this is effectively done AFTER the OperModeExecTree has ran.
-		;       If vert-/horizontalscroll is changed (and they are) in OperMode, we are showing wrong px i think
-		;
-		lda PPU_STATUS
-		lda Mirror_PPU_CTRL_REG1
-		and #$F7
-		ora UseNtBase2400
-		sta Mirror_PPU_CTRL_REG1
-		sta PPU_CTRL_REG1
-
-		; todo xxx is this retarded?
-		;lda WorldNumber
-		;cmp #9
-		;bcc NotWorld9Something
-		;jsr TerminateGame
-;NotWorld9Something:
-		lda GamePauseStatus
-		and #3
-		bne SkipMainOper
-		jsr OperModeExecutionTree
-SkipMainOper:
-		jsr Enter_RedrawUserVars
-		lda PPU_STATUS
-		lda Mirror_PPU_CTRL_REG1
-		ora #$80
-		sta Mirror_PPU_CTRL_REG1
-		sta PPU_CTRL_REG1
+   lda GamePauseStatus
+   and #$02
+   bne ExecutionTree
+   lda IRQUpdateFlag
+   beq ExecutionTree
+   lda GamePauseStatus
+   and #3
+   bne ExecutionTree
+   jsr MoveSpritesOffscreen
+   jsr SpriteShuffler
+ExecutionTree:
+   lda GamePauseStatus
+   and #3
+   bne WaitForIRQ
+   jsr OperModeExecutionTree ;run one of the program's four modes
+WaitForIRQ:
+   lda IRQAckFlag            ;wait for IRQ
+   bne WaitForIRQ
+   jsr Enter_RedrawUserVars
+   lda PPU_STATUS
+   lda Mirror_PPU_CTRL_REG1       ;reenable NMIs 
+   ora #$80
+   sta Mirror_PPU_CTRL_REG1       ;then park it at endless loop until next NMI
+   sta PPU_CTRL_REG1
 OnIRQ:
-		lda GamePauseStatus
-		and #$FD
-		sta GamePauseStatus
-		rti
+   lda GamePauseStatus
+   and #$FD
+   sta GamePauseStatus
+   rti
 
 SpriteShuffler:
 		ldy AreaType
@@ -888,112 +892,122 @@ WorldLivesDisplay:
 OnePlayerTimeUp:
 		.byte $22, $0C, $07, $1D, $12, $16, $0E, $24, $1E, $19
 		.byte $FF
+
+
+
+
+
+
+
+
+		
 WarpZoneWelcome:
-		.byte $25
-		.byte $84
-		.byte $15
-		.byte $20
-		.byte $E
-		.byte $15
-		.byte $C
-		.byte $18
-		.byte $16
-		.byte $E
-		.byte $24
-		.byte $1D
-		.byte $18
-		.byte $24
-		.byte $20
-		.byte $A
-		.byte $1B
-		.byte $19
-		.byte $24
-		.byte $23
-		.byte $18
-		.byte $17
-		.byte $E
-		.byte $2B
-		.byte $26
-		.byte $2D
-		.byte 1
-		.byte $24
-		.byte $27
-		.byte $D9
-		.byte $46
-		.byte $AA
-		.byte $27
-		.byte $E1
-		.byte $45
-		.byte $AA
-		.byte 0
+  .byte $25, $84, $15, $20, $0e, $15, $0c, $18, $16 ; "WELCOME TO WARP ZONE!"
+  .byte $0e, $24, $1d, $18, $24, $20, $0a, $1b, $19
+  .byte $24, $23, $18, $17, $0e, $2b
+  .byte $26, $25, $01, $24         ; placeholder for left pipe
+  .byte $26, $2d, $01, $24         ; placeholder for middle pipe
+  .byte $26, $35, $01, $24         ; placeholder for right pipe
+  .byte $27, $d9, $46, $aa         ; attribute data
+  .byte $27, $e1, $45, $aa
+  .byte $ff
 
 WarpZoneNumbers:
-		.byte 2
-		.byte 3
-		.byte 4
-		.byte 1
-		.byte 6
-		.byte 7
-		.byte 8
-		.byte 5
-		.byte $B
-		.byte $C
-		.byte $D
+  .byte $04, $03, $02, $00         ; warp zone numbers, note spaces on middle
+  .byte $24, $05, $24, $00         ; zone, partly responsible for
+  .byte $08, $07, $06, $00         ; the minus world
+  .byte $B, $C, $0, $D
+
 
 GameTextOffsets:
-		.byte 0
-		.byte WorldLivesDisplay-GameText
-		.byte OnePlayerTimeUp-GameText
-		.byte 0 ;??
+	.byte 0
+	.byte WorldLivesDisplay-GameText
+	.byte OnePlayerTimeUp-GameText
+	.byte 0
+	.byte WarpZoneWelcome-GameText
 
 WriteGameText_NEW:
-		pha
-		tay
-		ldx GameTextOffsets,y
-		ldy #0
-loc_6722:
-		lda GameText,x
-		cmp #$FF
-		beq loc_6730
-		sta $301,y
-		inx
-		iny
-		bne loc_6722
-loc_6730:
-		lda #0
-		sta $301,y
-		sty VRAM_Buffer1_Offset
-		pla
-		beq EndOfWriteGameText
-		tax
-		dex
-		bne EndOfWriteGameText
-		lda #$CE
-		sta byte_309
-		jsr GetWorldNumber
-		sta byte_314
-		ldy LevelNumber
-		iny
-		sty byte_316
-EndOfWriteGameText:
-		rts
+               pha                      ;save text number to stack
+               tay
+               cpy #$01                 ;if set to do top status bar or world/lives display,
+               bcc LdGameText           ;branch to use current offset as-is
+               cpy #$04                 ;if set to do time-up or game over,
+               bcc LdGameText           ;branch to check players
+               ldy #$04                 ;otherwise warp zone, therefore set offset
+LdGameText:    ldx GameTextOffsets,y    ;get offset to message we want to print
+               ldy #0
+GameTextLoop:  lda GameText,x           ;load message data
+               cmp #$ff                 ;check for terminator
+               beq EndGameText          ;branch to end text if found
+WriteTextByte:
+               sta VRAM_Buffer1,y       ;otherwise write data to buffer
+               inx
+               iny
+               bne GameTextLoop         ;do this for 256 bytes if no terminator found
+EndGameText:   lda #$00                 ;put null terminator at end
+               sta VRAM_Buffer1,y
+               sty VRAM_Buffer1_Offset
+               pla                      ;pull original text number from stack
+               tax
+               cmp #$02                 ;are we printing warp zone?
+               bcs PrintWarpZoneNumbers
+               dex                      ;are we printing the world/lives display?
+               bne WriteTextDone      ;if not, branch to check player's name
+               lda #$ce
+PutLives:      sta VRAM_Buffer1+7
+               ldy WorldNumber          ;write world and level numbers (incremented for display)
+               iny                      ;to the buffer in the spaces surrounding the dash
+               sty VRAM_Buffer1+19
+               ldy LevelNumber
+               iny
+               sty VRAM_Buffer1+21      ;we're done here
+WriteTextDone:
+               rts
 
-sub_675E:
-		pha
-		ldy #$FF
-loc_6761:
-		iny
-		lda WarpZoneWelcome,y
-		sta $301,y
-		bne loc_6761
-		pla
-		sec
-		sbc #$80
-		tax
-		lda WarpZoneNumbers,x
-		sta byte_31C
-		lda #$24
-		jmp SetVRAMOffset
+PrintWarpZoneNumbers:
+             sbc #$04               ;subtract 4 and then shift to the left
+             asl                    ;twice to get proper warp zone number
+             asl                    ;offset
+			tax
+
+			lda IsPlayingExtendedWorlds
+			ldy IsPlayingExtendedWorlds
+			beq @WarpLoop
+			adc #9
+			adc WorldNumber
+			adc AreaNumber
+			tax
+			lda WarpZoneNumbers,x  ;print warp zone number into the placeholder
+			sta VRAM_Buffer1+27+4
+			ldy #2
+			jmp @exit
+@WarpLoop:
+			ldy #$00
+@WarpNumLoop: lda WarpZoneNumbers,x  ;print warp zone numbers into the
+             sta VRAM_Buffer1+27,y  ;placeholders from earlier
+             inx
+             iny                    ;put a number in every fourth space
+             iny
+             iny
+             iny
+             cpy #$0c
+             bcc @WarpNumLoop
+@exit:
+             lda #$2c               ;load new buffer pointer at end of message
+             jmp SetVRAMOffset
+
+;-------------------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
 ResetSpritesAndScreenTimer:
 
 		lda ScreenTimer
@@ -2188,7 +2202,6 @@ loc_6EA9:
 		sta AreaMusicQueue
 		lda #1
 		sta DisableScreenFlag
-		jsr Enter_LoadPhysicsData
 		inc OperMode_Task
 		rts
 
@@ -2224,21 +2237,9 @@ loc_6EF5:
 		sta $6E4,x
 		dex
 		bpl loc_6EF5
-
-		ldx #3
-CopyMoreSprite0Data:
-		lda Sprite0Data, x
-		sta $200, x
-		dex
-		bpl CopyMoreSprite0Data
-
-		jsr sub_70BB
-		inc Sprite0HitDetectFlag
+		inc IRQUpdateFlag
 		inc OperMode_Task
 		rts
-
-Sprite0Data:
-		.byte $18, $EE, $23, $58
 
 InitializeMemory:
 		ldx #7
@@ -2402,7 +2403,7 @@ loc_6FF8:
 PlayerLoseLife:
 		inc DisableScreenFlag
 		lda #0
-		sta Sprite0HitDetectFlag
+		sta IRQUpdateFlag
 		lda #$80
 		sta EventMusicQueue
 StillInGame:
@@ -3264,65 +3265,29 @@ loc_750F:
 
 		sta ForegroundScenery
 		rts
+
+
+
+
 XXX_ScrollLockObject_Warp_RW_POSS:
+ScrollLockObject_Warp:
+         ldx #$04            ;load value of 4 for game text routine as default
+         lda WorldNumber     ;warp zone (4-3-2), then check world number
+         beq WarpNum
+         inx                 ;if world number > 1, increment for next warp zone (5)
+         ldy AreaType        ;check area type
+         dey
+         bne WarpNum         ;if ground area type, increment for last warp zone
+         inx                 ;(8-7-6) and move on
+WarpNum: txa
+         sta WarpZoneControl ;store number here to be used by warp zone routine
+         jsr WriteGameText_NEW   ;print text and warp zone numbers
+         lda #PiranhaPlant
+         jsr sub_756D     ;load identifier for piranha plants and do sub
 
-		ldx #$80
-		lda IsPlayingExtendedWorlds
-		bne loc_752F
-		lda WorldNumber
-		bne loc_7537
-		ldy AreaType
-		dey
-		beq loc_752B
-		lda AreaAddrsLOffset
-		beq loc_752C
-		inx
-loc_752B:
 
-		inx
-loc_752C:
 
-		jmp loc_7558
-loc_752F:
 
-		lda #$87
-		clc
-		adc LevelNumber
-		bne loc_7559
-loc_7537:
-
-		ldx #$83
-		lda WorldNumber
-		cmp #2
-		beq loc_7558
-		inx
-		cmp #4
-		bne loc_7555
-		lda AreaAddrsLOffset
-		cmp #$B
-		beq loc_7558
-		ldy AreaType
-		dey
-		beq loc_7556
-		jmp loc_7557
-loc_7555:
-
-		inx
-loc_7556:
-
-		inx
-loc_7557:
-
-		inx
-loc_7558:
-
-		txa
-loc_7559:
-
-		sta WarpZoneControl
-		jsr sub_675E
-		lda #$D
-		jsr sub_756D
 ScrollLockObject:
 
 		lda ScrollLock
@@ -3663,6 +3628,12 @@ loc_773C:
 
 		tya
 		pha
+          
+		lda AreaNumber
+        ora WorldNumber          ;if at world 1-1, do not add piranha plant ever
+		ora IsPlayingExtendedWorlds
+		beq loc_774D
+
 		ldy AreaObjectLength,x
 		beq loc_774D
 		jsr FindEmptyEnemySlot
@@ -4183,13 +4154,14 @@ GameMode:
 		jsr JumpEngine
 		.word LoadCorrectData
 		.word InitializeArea
+		.word Increase_OperMode_Task
 		.word ScreenRoutines
 		.word SecondaryGameSetup
 		.word GameCoreRoutine_RW
 GameCoreRoutine_RW:
 		jsr GameRoutines
 		lda OperMode_Task
-		cmp #4
+		cmp #5
 		bcs GameEngine
 		rts
 
@@ -4304,6 +4276,8 @@ loc_7B16:
 		bcc loc_7B20
 		ldy Player_X_Scroll
 loc_7B20:
+        lda IRQAckFlag
+        bne loc_7B20           ;loop if IRQ has not yet happened
 		tya
 		sta ScrollAmount
 		clc
@@ -4649,7 +4623,7 @@ sub_7D6B:
 		inc DisableScreenFlag
 		lda #0
 		sta OperMode_Task
-		sta Sprite0HitDetectFlag
+		sta IRQUpdateFlag
 locret_7D76:
 
 		rts
@@ -6947,57 +6921,17 @@ locret_8C46:
 
 		rts
 LoopCmdWorldNumber:
-		.byte 2
-		.byte 2
-		.byte 2
-		.byte 2
-		.byte 5
-		.byte 5
-		.byte 5
-		.byte 5
-		.byte 6
-		.byte 7
-		.byte 7
-		.byte 4
+      .byte $03, $03, $06, $06, $06, $06, $06, $06, $07, $07
+
 LoopCmdPageNumber:
-		.byte 3
-		.byte 5
-		.byte 8
-		.byte 9
-		.byte 3
-		.byte 6
-		.byte 7
-		.byte $A
-		.byte 5
-		.byte 5
-		.byte $B
-		.byte 5
+      .byte $05, $09, $04, $05, $06, $08, $09, $0a, $05, $0b
+
 LoopCmdYPosition:
-		.byte $B0
-		.byte $B0
-		.byte $40
-		.byte $30
-		.byte $B0
-		.byte $30
-		.byte $B0
-		.byte $B0
-		.byte $F0
-		.byte $F0
-		.byte $B0
-		.byte $F0
+      .byte $b0, $40, $40, $40, $40, $40, $80, $80, $f0, $b0
+
 LoopCmdMultiLoopPassCntr:
-		.byte 2
-		.byte 2
-		.byte 2
-		.byte 2
-		.byte 2
-		.byte 2
-		.byte 2
-		.byte 2
-		.byte 1
-		.byte 1
-		.byte 1
-		.byte 1
+	.byte 1, 1, 3, 3, 3, 3, 3, 3, 1, 1
+
 sub_8C77:
 
 		lda Player_PageLoc
@@ -7051,13 +6985,9 @@ FindLoop:
 		lda Player_State
 		cmp #0
 		bne loc_8CE6
-		lda #Sfx_CoinGrab
 		inc MultiLoopCorrectCntr
-		bne skipFailSound
 loc_8CE6:
-		lda #Sfx_TimerTick
-skipFailSound:
-		sta Square2SoundQueue
+
 		inc MultiLoopPassCntr
 		lda MultiLoopPassCntr
 		cmp LoopCmdMultiLoopPassCntr,y
@@ -8158,13 +8088,8 @@ loc_939A:
 		sta TMP_0
 		lda #$13
 		sta TMP_1
-		lda IsPlayingExtendedWorlds
-		bne loc_93B2
-		lda WorldNumber
-		cmp #3
-		bcs loc_93B2
 		dec TMP_0
-		lda #$21
+		lda #$12
 		sta TMP_1
 loc_93B2:
 
@@ -8222,7 +8147,7 @@ InitJumpGPTroopa:
 
 		lda #2
 		sta Enemy_MovingDir,x
-		lda #$F4
+		lda #$f8
 		sta Enemy_X_Speed,x
 TallBBox2:
 
@@ -9615,7 +9540,6 @@ byte_9C13:
 		.byte $80
 BridgeCollapse:
 
-		jsr Enter_EndOfCastle
 		ldx BowserFront_Offset
 		lda Enemy_ID,x
 		cmp #$2D
@@ -10120,8 +10044,9 @@ DrawFlagSetTimer:
 		lda #6
 		sta $796,x
 IncrementSFTask2:
+		jsr Enter_RedrawAll
 		inc StarFlagTaskControl
-		jmp Enter_RedrawAll
+		rts
 
 DelayToAreaEnd:
 		jsr DrawStarFlag
@@ -11458,6 +11383,20 @@ loc_A844:
 		txa
 loc_A860:
 
+		; NIPPON
+        pha
+        lda     Player_Y_HighPos
+        cmp     #$01
+        bne     nip_ypos_change
+        lda     Player_Y_Position
+        cmp     #$DF
+        bcc     nip_ypos_change
+        pla
+        rts
+nip_ypos_change:
+        pla
+		; END NIPPON
+
 		ldx ObjectOffset
 		sta $3A2,x
 		lda #0
@@ -11782,7 +11721,6 @@ loc_AA5E:
 		bne locret_AA70
 		lda #2
 		sta GameEngineSubroutine
-		jsr Enter_RedrawAll
 		rts
 loc_AA6D:
 
@@ -11801,15 +11739,22 @@ loc_AA73:
 		jmp GiveOneCoin
 
 HandleAxeMetatile:
+		jsr Enter_EndOfCastle
 		lda #0
 		sta OperMode_Task
+		sta CurrentPlayer
+		; TODO hackyfucky
 		lda #2
 		sta OperMode
-		jsr Enter_EndOfCastle
-		jsr Enter_LoadMarioPhysics
 		lda #$18
 		sta Player_X_Speed
-		
+		cpx #1
+		bne @not_end_of_game
+		;
+		; ############### WARNING THIS ADDS A FRAME!!! #####################
+		;
+		rts
+@not_end_of_game:
 sub_AA8D:
 
 		ldy byte_2
@@ -15460,16 +15405,18 @@ TitleScreenMode:
 		jsr JumpEngine
 		.word TitleInitializeFdsLoads
 		.word PrepareDrawTitleScreen
+		.word Increase_OperMode_Task
+		.word Increase_OperMode_Task
+		.word Increase_OperMode_Task
 		.word ScreenRoutines
 		.word PrimaryGameSetup
 		.word RunTitleScreen
 		.word FinalizeTitleScreen
 
 IsBigWorld:
-		.byte 1, 0, 1, 0
-		.byte 1, 1, 0, 0
-		.byte 0
-		.byte 1, 1, 0, 0
+.byte 1, 1, 0, 1, 0, 0, 1, 0
+.byte 0
+.byte 1, 1, 0, 0
 
 NoGoTime:
 		lda #0
@@ -15481,7 +15428,7 @@ NoGoTime:
 RunTitleScreen:
 		jsr Enter_PracticeTitleMenu
 		lda OperMode_Task
-		cmp #5
+		cmp #8
 		bne NoGoTime
 		ldx LevelNumber
 		ldy WorldNumber
@@ -15606,8 +15553,8 @@ byte_C10B:
 PrepareFdsLoad:
 		lda #0
 		sta Mirror_PPU_CTRL_REG2
-		sta PPU_CTRL_REG2
-		sta Sprite0HitDetectFlag
+		sta IRQUpdateFlag
+;		sta PPU_CTRL_REG2
 		inc DisableScreenFlag
 		lda #$1A
 		sta VRAM_Buffer_AddrCtrl
@@ -15635,18 +15582,7 @@ FDSResetZero:
 		rts
 
 SWAPDATA_AreaDataOfsLoopback:
-		.byte $C
-		.byte $C
-		.byte $42
-		.byte $42
-		.byte $10
-		.byte $10
-		.byte $30
-		.byte $30
-		.byte 6
-		.byte $C
-		.byte $54
-		.byte 6
+      .byte $12, $36, $0e, $0e, $0e, $32, $32, $32, $0a, $26, $40
 
 GameMenuRoutine_NEW:
 GameMenuRoutineInner_NEW:
@@ -15720,99 +15656,23 @@ loc_C620:
 		rts
 
 TitleScreenData:
-		.byte $20, $84
-		.byte $01
-		.byte $44
-
-		.byte $20, $85
-		.byte $57
-		.byte $48
-
-		.byte $20, $9C
-		.byte $01
-		.byte $49
-
-		.byte $20, $A4
-		.byte $C9
-		.byte $46
-
-		.byte $20, $A5
-		.byte $57
-		.byte $26
-
-		.byte $20, $BC
-		.byte $C9
-		.byte $4A
-
-		.byte $20, $A5
-		.byte $0A
-		.byte $D0, $D1, $D8, $D8, $DE, $D1, $D0, $DA, $DE, $D1
-
-		.byte $20, $C5
-		.byte $17
-		.byte $D2, $D3, $DB, $DB, $DB, $D9, $DB, $DC
-		.byte $DB, $DF, $26, $26, $26, $26, $26, $26
-		.byte $26, $26, $26, $26, $26, $26, $26
-
-		.byte $20, $E5
-		.byte $17
-		.byte $D4, $D5, $D4, $D9, $DB, $E2, $D4, $DA
-		.byte $DB, $E0, $26, $26, $26, $26, $26, $26
-		.byte $26, $26, $26, $26, $26, $26, $26
-
-		.byte $21, $05
-		.byte $57
-		.byte $26
-
-		.byte $21, $05
-		.byte $0A
-		.byte $D6, $D7, $D6, $D7, $E1, $26, $D6, $DD, $E1, $E1
-		
-		.byte $21, $25
-		.byte $17
-		.byte $D0, $E8, $D1, $D0, $D1, $DE, $D1, $D8
-		.byte $D0, $D1, $26, $DE, $D1, $DE, $D1, $D0
-		.byte $D1, $D0, $D1, $26, $26, $D0, $D1
-
-		.byte $21, $45
-		.byte $17
-		.byte $DB, $42, $42, $DB, $42, $DB, $42, $DB
-		.byte $DB, $42, $26, $DB, $42, $DB, $42, $DB
-		.byte $42, $DB, $42, $26, $26, $DB, $42
-
-		.byte $21, $65
-		.byte $46
-		.byte $DB
-
-		.byte $21, $6B
-		.byte $11 
-		.byte $DF, $DB, $DB, $DB, $26, $DB, $DF, $DB
-		.byte $DF, $DB, $DB, $E4, $E5, $26, $26, $EC
-		.byte $ED
-
-		.byte $21, $85
-		.byte $17
-		.byte $DB, $DB, $DB, $DE, $43, $DB, $E0, $DB
-		.byte $DB, $DB, $26, $DB, $E3, $DB, $E0, $DB
-		.byte $DB, $E6, $E3, $26, $26, $EE, $EF
-
-		.byte $21, $A5
-		.byte $17
-		.byte $DB, $DB, $DB, $DB, $42, $DB, $DB, $DB
-		.byte $D4, $D9, $26, $DB, $D9, $DB, $DB, $D4
-		.byte $D9, $D4, $D9, $E7, $26, $DE, $DA
-
-		.byte $21, $C4
-		.byte $19
-		.byte $5F, $95, $95, $95, $95, $95, $95, $95
-		.byte $95, $97, $98, $78, $95, $96, $95, $95
-		.byte $97, $98, $97, $98, $95, $78, $95, $F0
-		.byte $7A
-
-		.byte $21, $EF
-		.byte $0E
-		.byte $CF, $01, $09, $08, $06, $24, $17, $12
-		.byte $17, $1D, $0E, $17, $0D, $18
+.byte $20,$85,$01,$44
+.byte $20,$86,$55,$48
+.byte $20,$9B,$01,$49
+.byte $20,$A5,$C9,$46
+.byte $20,$BB,$C9,$4A
+.byte $20,$A6,$15,$EC,$ED,$EE,$EF,$F3,$F4,$F5,$F6,$F7,$F8,$D0,$D1,$D8,$D8,$DE,$D1,$D0,$DA,$DE,$D1,$26
+.byte $20,$C6,$15,$26,$26,$26,$26,$26,$26,$26,$26,$26,$26,$D2,$D3,$DB,$DB,$DB,$D9,$DB,$DC,$DB,$DF,$26
+.byte $20,$E6,$15,$26,$26,$26,$26,$26,$26,$26,$26,$26,$26,$D4,$D5,$D4,$D9,$DB,$E2,$D4,$DA,$DB,$E0,$26
+.byte $21,$06,$55,$26
+.byte $21,$10,$0A,$D6,$D7,$D6,$D7,$E1,$26,$D6,$DD,$E1,$E1
+.byte $21,$26,$15,$D0,$E8,$D1,$D0,$D1,$DE,$D1,$D8,$D0,$D1,$26,$DE,$D1,$DE,$D1,$D0,$D1,$D0,$D1,$26,$26
+.byte $21,$46,$15,$DB,$42,$42,$DB,$E3,$DB,$E3,$DB,$DB,$E3,$26,$DB,$E3,$DB,$E3,$DB,$E3,$DB,$E3,$26,$26
+.byte $21,$66,$46,$DB,$21,$6C,$0F,$DF,$DB,$DB,$DB,$26,$DB,$DF,$DB,$DF,$DB,$DB,$D2,$E5,$26,$26
+.byte $21,$86,$15,$DB,$DB,$DB,$DE,$43,$DB,$DB,$DB,$DB,$DB,$26,$DB,$E3,$DB,$E3,$DB,$DB,$DB,$E3,$26,$26
+.byte $21,$A6,$15,$DB,$DB,$DB,$DB,$DB,$DB,$DB,$DB,$D4,$D9,$26,$DB,$D9,$DB,$DB,$D4,$D9,$D4,$D9,$DA,$26
+.byte $21,$C5,$17,$5F,$95,$95,$95,$95,$95,$95,$95,$95,$97,$98,$78,$95,$96,$95,$95,$97,$98,$97,$98,$95,$78,$7A
+.byte $21,$EE,$0E,$CF,$01,$09,$08,$06,$24,$17,$12,$17,$1D,$0E,$17,$0D,$18
 
 		.byte $23, $C9
 		.byte $47
@@ -15828,7 +15688,7 @@ TitleScreenData:
 
 		.byte $23, $CC
 		.byte $43
-		.byte $F5
+		.byte $55
 
 		.byte $23, $D6
 		.byte $01
@@ -16508,7 +16368,7 @@ SetEndingFrameBuffer:
 		lda #$1B
 		sta VRAM_Buffer_AddrCtrl
 		lda #0
-		sta Sprite0HitDetectFlag
+		sta IRQUpdateFlag
 		inc ScreenRoutineTask
 		rts
 
@@ -16526,7 +16386,7 @@ PrintAndPatchSoundEngine:
 		sta Left_Right_Buttons
 		sta NumberOfPlayers
 		sta DisableScreenFlag
-		inc Sprite0HitDetectFlag
+		inc IRQUpdateFlag
 		inc OperMode_Task
 		rts
 
