@@ -256,15 +256,16 @@ InterruptRequest:
 DelS:
 	dey
     bne DelS
-	lda PPU_CTRL_REG1
-	and #$f7                 ;mask out sprite address high reg of ctrl reg mirror
-	ora $77a      	 ;mask in whatever's set here
+	lda $5204      		     ;disable IRQs for the rest of the frame
+	lda Mirror_PPU_CTRL_REG1
+	and #%11110110           ;mask out sprite address and nametable             
+	ora $77a      	 		 ;mask in whatever's set here
 	sta Mirror_PPU_CTRL_REG1  ;update the register and its mirror
 	sta PPU_CTRL_REG1
 	lda #$00
-	sta $5204      		     ;disable IRQs for the rest of the frame
+	lda $5204      		     ;disable IRQs for the rest of the frame
 	lda HorizontalScroll
-	sta PPU_SCROLL_REG           ;set scroll regs for the screen under the status bar
+	sta PPU_SCROLL_REG       ;set scroll regs for the screen under the status bar
 	lda VerticalScroll       ;to achieve the split screen effect
 	sta PPU_SCROLL_REG
 	lda #$00
