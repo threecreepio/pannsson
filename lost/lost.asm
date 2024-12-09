@@ -11365,13 +11365,12 @@ loc_AA73:
 		jmp GiveOneCoin
 
 HandleAxeMetatile:
-		jsr Enter_EndOfCastle
 		lda #0
 		sta OperMode_Task
-		sta CurrentPlayer
-		; TODO hackyfucky
 		lda #2
 		sta OperMode
+		jsr Enter_RedrawAll
+		jsr Enter_LoadMarioPhysics
 		lda #$18
 		sta Player_X_Speed
 		cpx #1
