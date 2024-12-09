@@ -361,6 +361,7 @@ EnemyDataAddrLow_Underground:
 .word E_UndergroundArea1
 .word E_UndergroundArea2
 .word E_UndergroundArea3
+.word E_UndergroundArea4
 EnemyDataAddrLow_Castle:
 .word E_CastleArea1
 .word E_CastleArea2
@@ -410,6 +411,7 @@ AreaDataAddrLow_Underground:
 .word L_UndergroundArea1
 .word L_UndergroundArea2
 .word L_UndergroundArea3
+.word L_UndergroundArea4
 AreaDataAddrLow_Castle:
 .word L_CastleArea1
 .word L_CastleArea2
@@ -430,56 +432,92 @@ AreaDataAddrLow_Castle:
 
 ;; underwater area in 5-2/6-2
 L_WaterArea1:
-.byte $41, $01, $B4, $34, $C8, $52, $F2, $51, $47, $D3, $6C, $03, $65, $49, $9E, $07, $BE, $01, $CC, $03, $FE, $07, $0D, $C9, $1E, $01, $6C, $01, $62, $35, $63, $53, $8A, $41, $AC, $01, $B3, $53, $E9, $51, $26, $C3, $27, $33, $63, $43, $64, $33, $BA, $60, $C9, $61, $CE, $0B, $D4, $31, $E5, $0D, $EE, $0F, $7D, $CA, $7D, $47, $FD
+.byte $41,$01,$B4,$34,$C8,$52,$F2,$51,$47,$D3,$6C,$03,$65,$49,$9E,$07
+.byte $BE,$01,$CC,$03,$FE,$07,$0D,$C9,$1E,$01,$6C,$01,$62,$35,$63,$53
+.byte $8A,$41,$AC,$01,$B3,$53,$E9,$51,$26,$C3,$27,$33,$63,$43,$64,$33
+.byte $BA,$60,$C9,$61,$CE,$0B,$D4,$31,$E5,$0A,$EE,$0F,$7D,$CA,$7D,$47
+.byte $FD
 E_WaterArea1:
-.byte $3B, $87, $66, $27, $CC, $27, $EE, $31, $87, $EE, $23, $A7, $3B, $87, $DB, $07, $FF
+.byte $3B,$87,$66,$27,$CC,$27,$EE,$31,$87,$EE,$23,$A7,$3B,$87,$DB,$07
+.byte $FF
 
 ;; underwater area in 8-4
 L_WaterArea3:
-.byte $07, $0F, $0E, $02, $39, $73, $05, $8E, $2E, $0B, $B7, $0E, $64, $8E, $6E, $02, $CE, $06, $DE, $0F, $E6, $0D, $7D, $C7, $FD
+.byte $07,$0F,$0E,$02,$39,$73,$05,$8B,$2E,$0B,$B7,$0B,$64,$8B,$6E,$02
+.byte $CE,$06,$DE,$0F,$E6,$0A,$7D,$C7,$FD
 E_WaterArea3:
-.byte $07, $9B, $0A, $07, $B9, $1B, $66, $9B, $78, $07, $AE, $65, $E5, $FF
+.byte $07,$9B,$0A,$07,$B9,$1B,$66,$9B,$78,$07,$AE,$65,$E5,$FF
 
 
 ;; coin cache 1
 L_UndergroundArea3:
-.byte $48, $01, $0E, $01, $00, $5A, $3E, $06, $45, $46, $47, $46, $53, $44, $AE, $01, $DF, $4A, $4D, $C7, $0E, $81, $00, $5A, $2E, $04, $37, $28, $3A, $48, $46, $47, $C7, $0B, $CE, $0F, $DF, $4A, $4D, $C7, $0E, $81, $00, $5A, $33, $53, $43, $51, $46, $40, $47, $50, $53, $07, $55, $40, $56, $50, $62, $43, $64, $40, $65, $50, $71, $41, $73, $51, $83, $51, $94, $40, $95, $50, $A3, $50, $A5, $40, $A6, $50, $B3, $51, $B6, $40, $B7, $50, $C3, $53, $DF, $4A, $4D, $C7, $0E, $81, $00, $5A, $2E, $02, $36, $47, $37, $52, $3A, $49, $47, $25, $A7, $52, $D7, $07, $DF, $4A, $4D, $C7, $0E, $81, $00, $5A, $3E, $02, $44, $51, $53, $44, $54, $44, $55, $24, $A1, $54, $AE, $01, $B4, $21, $DF, $4A, $E5, $0B, $4D, $C7, $FD
+.byte $48,$01,$0e,$01,$00,$5a,$3e,$06,$45,$46,$47,$46,$53,$44,$ae,$01
+.byte $df,$4a,$4d,$c7,$0e,$81,$00,$5a,$2e,$04,$37,$28,$3a,$48,$46,$47
+.byte $c7,$08,$ce,$0f,$df,$4a,$4d,$c7,$0e,$81,$00,$5a,$33,$53,$43,$51
+.byte $46,$40,$47,$50,$53,$05,$55,$40,$56,$50,$62,$43,$64,$40,$65,$50
+.byte $71,$41,$73,$51,$83,$51,$94,$40,$95,$50,$a3,$50,$a5,$40,$a6,$50
+.byte $b3,$51,$b6,$40,$b7,$50,$c3,$53,$df,$4a,$4d,$c7,$0e,$81,$00,$5a
+.byte $2e,$02,$36,$47,$37,$52,$3a,$49,$47,$25,$a7,$52,$d7,$05,$df,$4a
+.byte $4d,$c7,$0e,$81,$00,$5a,$3e,$02,$44,$51,$53,$44,$54,$44,$55,$24
+.byte $a1,$54,$ae,$01,$b4,$21,$df,$4a,$e5,$08,$4d,$c7,$fd
 E_UndergroundArea3:
-.byte $1E, $A5, $0A, $2E, $28, $27, $0F, $03, $1E, $40, $07, $0F, $05, $1E, $24, $44, $0F, $07, $1E, $22, $6A, $0F, $09, $1E, $41, $68, $FF
+.byte $1e,$a5,$0a,$2e,$28,$27,$0f,$03,$1e,$40,$07,$0f,$05,$1e,$24,$44
+.byte $0f,$07,$1e,$22,$6a,$0f,$09,$1e,$41,$68,$ff
+
+;; coin cache 2
+L_UndergroundArea4:
+.byte $48,$01,$0E,$01,$00,$5A,$3E,$06,$45,$46,$47,$46,$53,$44,$AE,$01
+.byte $DF,$4A,$4D,$C7,$0E,$81,$00,$5A,$2E,$04,$37,$28,$3A,$48,$46,$47
+.byte $C7,$08,$CE,$0F,$DF,$4A,$4D,$C7,$0E,$81,$00,$5A,$2E,$02,$36,$47
+.byte $37,$52,$3A,$49,$47,$25,$A7,$52,$D7,$05,$DF,$4A,$4D,$C7,$0E,$81
+.byte $00,$5A,$3E,$02,$44,$51,$53,$44,$54,$44,$55,$24,$A1,$54,$AE,$01
+.byte $B4,$21,$DF,$4A,$E5,$08,$4D,$C7,$FD
+E_UndergroundArea4:
+.byte $1E,$B3,$C7,$0F,$03,$1E,$30,$E7,$0F,$05,$1E,$23,$AB,$0F,$07,$1E
+.byte $2A,$8A,$2E,$23,$A2,$2E,$32,$EA,$FF
 
 ;; 4-2 warpzone
 L_GroundArea16:
-.byte $10, $51, $4C, $00, $C7, $12, $C6, $42, $03, $92, $02, $42, $29, $12, $63, $12, $62, $42, $69, $14, $A5, $12, $A4, $42, $E2, $14, $E1, $44, $F8, $16, $37, $C1, $8F, $38, $02, $BB, $28, $7A, $68, $7A, $A8, $7A, $E0, $6A, $F0, $6A, $6D, $C5, $FD
+.byte $10,$51,$4c,$00,$c7,$12,$c6,$42,$03,$92,$02,$42,$29,$12,$63,$12
+.byte $62,$42,$69,$14,$a5,$12,$a4,$42,$e2,$14,$e1,$44,$f8,$16,$37,$c1
+.byte $8f,$38,$02,$bb,$28,$7a,$68,$7a,$a8,$7a,$e0,$6a,$f0,$6a,$6d,$c5
+.byte $fd
 E_GroundArea16:
-.byte $FF
+.byte $ff
 
 ;; coin heaven 1
 L_GroundArea12:
-.byte $00, $C1, $4C, $00, $F4, $4F, $0D, $02, $02, $42, $43, $4F, $52, $C2, $DE, $00, $5A, $C2, $4D, $C7, $FD
+.byte $00,$c1,$4c,$00,$f4,$4f,$0d,$02,$02,$42,$43,$4f,$52,$c2,$de,$00
+.byte $5a,$c2,$4d,$c7,$fd
 E_GroundArea12:
-.byte $0A, $AA, $0E, $28, $2A, $FF
+.byte $0a,$aa,$0e,$28,$2a,$ff
 
 ;; coin heaven 2
 L_GroundArea21:
-.byte $06, $C1, $4C, $00, $F4, $4F, $0D, $02, $06, $20, $24, $4F, $35, $A0, $36, $20, $53, $46, $D5, $20, $D6, $20, $34, $A1, $73, $49, $74, $20, $94, $20, $B4, $20, $D4, $20, $F4, $20, $2E, $80, $59, $42, $4D, $C7, $FD
+.byte $06,$c1,$4c,$00,$f4,$4f,$0d,$02,$06,$20,$24,$4f,$35,$a0,$36,$20
+.byte $53,$46,$d5,$20,$d6,$20,$34,$a1,$73,$49,$74,$20,$94,$20,$b4,$20
+.byte $d4,$20,$f4,$20,$2e,$80,$59,$42,$4d,$c7,$fd
 E_GroundArea21:
-.byte $0A, $AA, $0E, $24, $4A, $FF
+.byte $0a,$aa,$0e,$24,$4a,$ff
 
 ;; coin heaven 3
 L_GroundArea26:
-.byte $00, $C1, $4C, $00, $F4, $4F, $0D, $02, $02, $42, $43, $4F, $52, $C2, $DE, $00, $5A, $C2, $4D, $C7, $FD
+.byte $00,$C1,$4C,$00,$F4,$4F,$0D,$02,$02,$42,$43,$4F,$52,$C2,$DE,$00
+.byte $5A,$C2,$4D,$C7,$FD
 E_GroundArea26:
-.byte $0A, $AA, $0E, $31, $88, $FF
+.byte $0A,$AA,$0E,$31,$88,$FF
 
 ;; coin heaven 4
 L_GroundArea27:
-.byte $06, $C1, $4C, $00, $F4, $4F, $0D, $02, $06, $20, $24, $4F, $35, $A0, $36, $20, $53, $46, $D5, $20, $D6, $20, $34, $A1, $73, $49, $74, $20, $94, $20, $B4, $20, $D4, $20, $F4, $20, $2E, $80, $59, $42, $4D, $C7, $FD
+.byte $06,$C1,$4C,$00,$F4,$4F,$0D,$02,$06,$20,$24,$4F,$35,$A0,$36,$20
+.byte $53,$46,$D5,$20,$D6,$20,$34,$A1,$73,$49,$74,$20,$94,$20,$B4,$20
+.byte $D4,$20,$F4,$20,$2E,$80,$59,$42,$4D,$C7,$FD
 E_GroundArea27:
-.byte $0A, $AA, $1E, $23, $AA, $FF
+.byte $0A,$AA,$1E,$23,$AA,$FF
 
 ;; stage exit area
 L_GroundArea25:
-.byte $90, $31, $39, $F1, $5F, $38, $6D, $C1, $AF, $26, $8D, $C7, $FD
+.byte $90,$31,$39,$F1,$5F,$38,$6D,$C1,$AF,$26,$8D,$C7
 E_GroundArea25:
 .byte $FF
 
@@ -543,7 +581,6 @@ EnemyDataAddrLowExt_Ground:
 .word E_GroundArea12Ext
 .word E_GroundArea13Ext
 .word E_GroundArea14Ext
-.word E_GroundArea15Ext
 EnemyDataAddrLowExt_Underground:
 .word E_UndergroundArea1Ext
 .word E_UndergroundArea2Ext
@@ -571,7 +608,6 @@ AreaDataAddrLowExt_Ground:
 .word L_GroundArea12Ext
 .word L_GroundArea13Ext
 .word L_GroundArea14Ext
-.word L_GroundArea15Ext
 AreaDataAddrLowExt_Underground:
 .word L_UndergroundArea1Ext
 .word L_UndergroundArea2Ext
@@ -584,4 +620,3 @@ AreaDataAddrLowExt_Castle:
 
 practice_callgate
 control_bank
-

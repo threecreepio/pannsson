@@ -413,7 +413,7 @@ dont_update_cursor:
 		lda CursorY
 		ldx SEL_INDEX
 		inx 
-		cpx #5
+		cpx #4
 		bne @no_loop_around
 		ldx #0
 		lda #SEL_START_Y-16
@@ -431,8 +431,8 @@ dont_update_cursor:
 		ldx SEL_INDEX
 		dex
 		bpl @no_underflow
-		ldx #4
-		lda #SEL_START_Y+(5*16)
+		ldx #3
+		lda #SEL_START_Y+(4*16)
 @no_underflow:
 		sec
 		sbc #16
@@ -441,9 +441,9 @@ dont_update_cursor:
 		cmp #Start_Button
 		bne exit_nmi
 		ldx SEL_INDEX
-		cpx #3
+		cpx #2
 		beq @settings
-		cpx #4
+		cpx #3
 		beq @showrecords
 		lda bank_table, x
 		jmp StartBank
@@ -699,21 +699,25 @@ credits_pellsson:
 	.byte "BY: PELLSSON            "
 credits_threecreepio:
 	.byte "BY: THREECREEPIO        "
-credits_simplistic_memes:
+credits_simplistic6502:
 	.byte "BY: SIMPLISTIC6502      "
+credits_web2000:
+	.byte "BY: WEB2000             "
 credits_reset:
 	.byte "CATCH THEM WITH PRACTICE"
 credits_end:
 
 credits_length:
 	.byte credits_threecreepio-credits_pellsson
-	.byte credits_simplistic_memes-credits_threecreepio
-	.byte credits_reset-credits_simplistic_memes
+	.byte credits_simplistic6502-credits_threecreepio
+	.byte credits_web2000-credits_simplistic6502
+	.byte credits_reset-credits_web2000
 	.byte credits_end-credits_reset
 credits_offset:
 	.byte credits_pellsson-credits_start
 	.byte credits_threecreepio-credits_start
-	.byte credits_simplistic_memes-credits_start
+	.byte credits_simplistic6502-credits_start
+	.byte credits_web2000-credits_start
 	.byte credits_reset-credits_start
 
 update_credits:
@@ -741,7 +745,7 @@ update_credits:
 		sty PPU_SCROLL_REG
 		ldx CreditsIndex
 		inx
-		cpx #4
+		cpx #5
 		bne @done
 		ldx #0
 @done:

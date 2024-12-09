@@ -697,37 +697,7 @@ menu_input:
 		sta LevelNumber
 		rts
 @world_selected:
-		lda WorldNumber
-		clc
-		adc $00
-		ldx BANK_SELECTED
-		cpx #BANK_ORG
-		bne @world_lost
-		and #$07
-		jmp @save_world
-@world_lost:
-		cmp #$08
-		bne @continue
-		lda $0
-		cmp #1 ; going right
-		bne @W9R
-		lda #$09
-		jmp @continue
-@W9R:
-		lda #$07
-@continue:
-		cmp #$0D
-		bcc @save_world
-		lda $0
-		cmp #1 ; going right
-		beq @going_left
-		lda #$0C
-		bne @save_world
-@going_left:
-		lda #$00
-@save_world:
-		sta WorldNumber
-		rts
+		jmp ChangeWorldNumber
 @check_pups:
 		dex
 		bne @hero_selected
@@ -747,6 +717,51 @@ menu_input:
 		and #$01
 		sta CurrentPlayer
 		jmp LL_UpdatePlayerChange
+
+ChangeWorldNumber:
+	ldx BANK_SELECTED          ; get selected game
+	ldy WorldNumber            ; and current world number
+	lda $0                     ; get input direction
+	cmp #1                     ; check for going right
+	bne @going_left            ; if not - skip to going left
+@going_right:                  ; we are going right
+	iny                        ; advance to next world
+	cpx #BANK_SMBLL             ; are we playing ANN?
+	bne @checked_ann_r         ; no - skip ahead
+	cpy #8                     ; yes - have we selected world 9
+	bne @checked_ann_r         ; no - skip ahead
+	iny                        ; yep - advance past world 9 (it doesnt exist in ANN)
+@checked_ann_r:                ;
+	cpx #BANK_ORG              ; are we playing smb1?
+	bne @check_ll_r            ; nope - we have more worlds to consider
+    cpy #9                     ; yes - are we past the end of the game?
+	bcc @store                 ; no - we're done, store the world
+	ldy #0                     ; yes - wrap around to world 1
+	beq @store                 ; and store
+@check_ll_r:                   ;
+	cpy #$D                    ; we are playing LL / ANN, are we past the end of the game?
+	bcc @store                 ; no - we're done, store the world
+	ldy #0                     ; yes - wrap around to world 1
+	beq @store                 ; and store
+@going_left:                   ; we are going left
+	dey                        ; drop world number by 1
+	cpx #BANK_SMBLL            ; are we playing ANN?
+	bne @checked_ann_l         ; no - skip ahead
+	cpy #8                     ; yes - have we selected world 9?
+	bne @checked_ann_l         ; no - skip ahead
+	dey                        ; yep - decrement past world 9 (it doesnt exist in ANN)
+@checked_ann_l:				   ;
+	cpy #$FF                   ; have we wrapped around?
+	bne @store                 ; no - we're done, store the world
+	cpx #BANK_ORG              ; are we playing smb1?
+	bne @check_ll_l            ; nope - we have more worlds to consider
+	ldy #$08                   ; yes - wrap around to world 9
+	bne @store                 ; and store
+@check_ll_l:                   ;
+    ldy #$0C                   ; we are playing LL / ANN, wrap to world D
+@store:                        ;
+	sty WorldNumber            ; update selected world
+	rts                        ; and exit
 
 next_task:
 		ldx #4*4-1
@@ -773,6 +788,14 @@ WriteRulePointer:
 		asl ; *=4
 		asl ; *=8
 		asl ; *=16
+		cmp #(8*16)
+		bcc @store
+		ldx BANK_SELECTED
+		cpx #BANK_SMBLL
+		bne @store
+		sec
+		sbc #16 ;subtract offset for nippon ext, no world 9
+@store:
 		sta $04
 		lda LevelNumber
 		asl ; *=2
@@ -799,9 +822,6 @@ WriteRulePointer:
 		rts
 
 toggle_second_quest:
-		lda BANK_SELECTED
-		cmp #BANK_ORG
-		bne @not_org
 		lda PrimaryHardMode
 		eor #1
 		sta PrimaryHardMode
@@ -813,18 +833,21 @@ toggle_second_quest:
 		sta VRAM_Buffer1+4,x
 		lda #$01
 		sta VRAM_Buffer1+2,x
-		lda #$22 ; Original color
-		ldy PrimaryHardMode
-		beq @set_default
 		lda #$05 ; Hardmode color
-@set_default:
+		ldy PrimaryHardMode
+		bne @set_color
+		lda #$22 ; Original color
+		ldy BANK_SELECTED
+		cpy #BANK_ORG
+		beq @set_color
+		lda #$0f ; Nippon color
+@set_color:
 		sta VRAM_Buffer1+3,x
 		inx
 		inx
 		inx
 		inx
-		sta VRAM_Buffer1_Offset
-@not_org:
+		stx VRAM_Buffer1_Offset
 		rts
 
 nuke_timer:
@@ -966,8 +989,16 @@ PracticeOnFrameInner:
 		beq @check_pause
 		cmp #GameModeValue
 		bne @exit
+		lda BANK_SELECTED
+		cmp #BANK_ORG
+		bne @nippleexit
+@orgpause:
 		lda OperMode_Task
 		cmp #$03
+		bmi @exit
+@nippleexit:
+		lda OperMode_Task
+		cmp #$05
 		bmi @exit
 @check_pause:
 		; TODO RENABLE
@@ -2057,7 +2088,7 @@ GetPbTimeX:
 		beq @not_ext
 		and #$03
 		clc
-		adc #$09
+		adc #$08
 @not_ext:
 	    asl
 	    asl

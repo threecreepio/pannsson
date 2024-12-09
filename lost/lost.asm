@@ -43,9 +43,8 @@ InitMoreWRAM:
 Start:
 		lda #0
 		sta PPU_CTRL_REG2
-		; lda FdsLastWrite4025
-		; and #$F7
-		; sta FDS_CONTROL
+        ldx #$ff                     ;reset stack pointer
+        txs
 		lda WorldNumber
 		pha
 
@@ -951,12 +950,11 @@ EndGameText:   lda #$00                 ;put null terminator at end
                tax
                cmp #$02                 ;are we printing warp zone?
                bcs PrintWarpZoneNumbers
-               dex                      ;are we printing the world/lives display?
+               dex                    ;are we printing the world/lives display?
                bne WriteTextDone      ;if not, branch to check player's name
                lda #$ce
-PutLives:      sta VRAM_Buffer1+7
-               ldy WorldNumber          ;write world and level numbers (incremented for display)
-               iny                      ;to the buffer in the spaces surrounding the dash
+			   sta VRAM_Buffer1+7
+PutLives:	   jsr GetWorldNumber	  ; why did we not reference this?
                sty VRAM_Buffer1+19
                ldy LevelNumber
                iny
@@ -1305,14 +1303,14 @@ WriteBlockMetatile:
 		cmp #0
 		beq loc_6964
 		ldy #0
-		cmp #$56
+		cmp #$57
 		beq loc_6964
-		cmp #$4F
+		cmp #$51
 		beq loc_6964
 		iny
 		cmp #$5C
 		beq loc_6964
-		cmp #$50
+		cmp #$52
 		beq loc_6964
 		iny
 loc_6964:
@@ -1396,425 +1394,114 @@ MetatileGraphics_High_RELOC:
 		.byte >Palette2_MTiles
 		.byte >Palette3_MTiles
 Palette0_MTiles:
-		.byte $24
-		.byte $24
-		.byte $24
-		.byte $24
-		.byte $27
-		.byte $27
-		.byte $27
-		.byte $27
-		.byte $24
-		.byte $24
-		.byte $24
-		.byte $35
-		.byte $36
-		.byte $25
-		.byte $37
-		.byte $25
-		.byte $24
-		.byte $38
-		.byte $24
-		.byte $24
-		.byte $24
-		.byte $30
-		.byte $30
-		.byte $26
-		.byte $26
-		.byte $26
-		.byte $34
-		.byte $26
-		.byte $24
-		.byte $31
-		.byte $24
-		.byte $32
-		.byte $33
-		.byte $26
-		.byte $24
-		.byte $33
-		.byte $34
-		.byte $26
-		.byte $26
-		.byte $26
-		.byte $26
-		.byte $26
-		.byte $26
-		.byte $26
-		.byte $24
-		.byte $C0
-		.byte $24
-		.byte $C0
-		.byte $24
-		.byte $7F
-		.byte $7F
-		.byte $24
-		.byte $B8
-		.byte $BA
-		.byte $B9
-		.byte $BB
-		.byte $B8
-		.byte $BC
-		.byte $B9
-		.byte $BD
-		.byte $BA
-		.byte $BC
-		.byte $BB
-		.byte $BD
-		.byte $60
-		.byte $64
-		.byte $61
-		.byte $65
-		.byte $62
-		.byte $66
-		.byte $63
-		.byte $67
-		.byte $60
-		.byte $64
-		.byte $61
-		.byte $65
-		.byte $62
-		.byte $66
-		.byte $63
-		.byte $67
-		.byte $68
-		.byte $68
-		.byte $69
-		.byte $69
-		.byte $26
-		.byte $26
-		.byte $6A
-		.byte $6A
-		.byte $4B
-		.byte $4C
-		.byte $4D
-		.byte $4E
-		.byte $4D
-		.byte $4F
-		.byte $4D
-		.byte $4F
-		.byte $4D
-		.byte $4E
-		.byte $50
-		.byte $51
-		.byte $86
-		.byte $8A
-		.byte $87
-		.byte $8B
-		.byte $88
-		.byte $8C
-		.byte $88
-		.byte $8C
-		.byte $89
-		.byte $8D
-		.byte $69
-		.byte $69
-		.byte $8E
-		.byte $91
-		.byte $8F
-		.byte $92
-		.byte $26
-		.byte $93
-		.byte $26
-		.byte $93
-		.byte $90
-		.byte $94
-		.byte $69
-		.byte $69
-		.byte $A4
-		.byte $E9
-		.byte $EA
-		.byte $EB
-		.byte $24
-		.byte $24
-		.byte $24
-		.byte $24
-		.byte $24
-		.byte $2F
-		.byte $24
-		.byte $3D
-		.byte $A2
-		.byte $A2
-		.byte $A3
-		.byte $A3
-		.byte $24
-		.byte $24
-		.byte $24
-		.byte $24
+  .byte $24, $24, $24, $24 ;blank
+  .byte $27, $27, $27, $27 ;black metatile
+  .byte $24, $24, $24, $35 ;bush left
+  .byte $36, $25, $37, $25 ;bush middle
+  .byte $24, $38, $24, $24 ;bush right
+  .byte $24, $30, $30, $26 ;mountain left
+  .byte $26, $26, $34, $26 ;mountain left bottom/middle center
+  .byte $24, $31, $24, $32 ;mountain middle top
+  .byte $33, $26, $24, $33 ;mountain right
+  .byte $34, $26, $26, $26 ;mountain right bottom
+  .byte $26, $26, $26, $26 ;mountain middle bottom
+  .byte $24, $c0, $24, $c0 ;bridge guardrail
+  .byte $24, $7f, $7f, $24 ;chain
+  .byte $b8, $ba, $b9, $bb ;tall tree top, top half
+  .byte $b8, $bc, $b9, $bd ;short tree top
+  .byte $ba, $bc, $bb, $bd ;tall tree top, bottom half
+  .byte $60, $64, $61, $65 ;warp pipe end left, points up
+  .byte $62, $66, $63, $67 ;warp pipe end right, points up
+  .byte $60, $64, $61, $65 ;decoration pipe end left, points up
+  .byte $62, $66, $63, $67 ;decoration pipe end right, points up
+  .byte $68, $68, $69, $69 ;pipe shaft left
+  .byte $26, $26, $6a, $6a ;pipe shaft right
+  .byte $4b, $4c, $4d, $4e ;tree ledge left edge
+  .byte $4d, $4f, $4d, $4f ;tree ledge middle
+  .byte $4d, $4e, $50, $51 ;tree ledge right edge
+  .byte $6b, $70, $2c, $2d ;mushroom left edge
+  .byte $6c, $71, $6d, $72 ;mushroom middle
+  .byte $6e, $73, $6f, $74 ;mushroom right edge
+  .byte $86, $8a, $87, $8b ;sideways pipe end top
+  .byte $88, $8c, $88, $8c ;sideways pipe shaft top
+  .byte $89, $8d, $69, $69 ;sideways pipe joint top
+  .byte $8e, $91, $8f, $92 ;sideways pipe end bottom
+  .byte $26, $93, $26, $93 ;sideways pipe shaft bottom
+  .byte $90, $94, $69, $69 ;sideways pipe joint bottom
+  .byte $a4, $e9, $ea, $eb ;seaplant
+  .byte $24, $24, $24, $24 ;blank, used on bricks or blocks that are hit
+  .byte $24, $2f, $24, $3d ;flagpole ball
+  .byte $a2, $a2, $a3, $a3 ;flagpole shaft
+  .byte $24, $24, $24, $24 ;blank, used in conjunction with vines
+
 Palette1_MTiles:
-		.byte $A2
-		.byte $A2
-		.byte $A3
-		.byte $A3
-		.byte $99
-		.byte $24
-		.byte $99
-		.byte $24
-		.byte $24
-		.byte $A2
-		.byte $3E
-		.byte $3F
-		.byte $5B
-		.byte $5C
-		.byte $24
-		.byte $A3
-		.byte $24
-		.byte $24
-		.byte $24
-		.byte $24
-		.byte $9D
-		.byte $47
-		.byte $9E
-		.byte $47
-		.byte $47
-		.byte $47
-		.byte $27
-		.byte $27
-		.byte $47
-		.byte $47
-		.byte $47
-		.byte $47
-		.byte $27
-		.byte $27
-		.byte $47
-		.byte $47
-		.byte $A9
-		.byte $47
-		.byte $AA
-		.byte $47
-		.byte $9B
-		.byte $27
-		.byte $9C
-		.byte $27
-		.byte $27
-		.byte $27
-		.byte $27
-		.byte $27
-		.byte $52
-		.byte $52
-		.byte $52
-		.byte $52
-		.byte $80
-		.byte $A0
-		.byte $81
-		.byte $A1
-		.byte $BE
-		.byte $BE
-		.byte $BF
-		.byte $BF
-		.byte $45
-		.byte $47
-		.byte $45
-		.byte $47
-		.byte $47
-		.byte $47
-		.byte $47
-		.byte $47
-		.byte $45
-		.byte $47
-		.byte $45
-		.byte $47
-		.byte $45
-		.byte $47
-		.byte $45
-		.byte $47
-		.byte $45
-		.byte $47
-		.byte $45
-		.byte $47
-		.byte $45
-		.byte $47
-		.byte $45
-		.byte $47
-		.byte $45
-		.byte $47
-		.byte $45
-		.byte $47
-		.byte $45
-		.byte $47
-		.byte $45
-		.byte $47
-		.byte $45
-		.byte $47
-		.byte $45
-		.byte $47
-		.byte $47
-		.byte $47
-		.byte $47
-		.byte $47
-		.byte $47
-		.byte $47
-		.byte $47
-		.byte $47
-		.byte $47
-		.byte $47
-		.byte $47
-		.byte $47
-		.byte $47
-		.byte $47
-		.byte $47
-		.byte $47
-		.byte $47
-		.byte $47
-		.byte $47
-		.byte $47
-		.byte $47
-		.byte $47
-		.byte $47
-		.byte $47
-		.byte $24
-		.byte $24
-		.byte $24
-		.byte $24
-		.byte $24
-		.byte $24
-		.byte $24
-		.byte $24
-		.byte $24
-		.byte $24
-		.byte $24
-		.byte $24
-		.byte $24
-		.byte $24
-		.byte $24
-		.byte $24
-		.byte $AB
-		.byte $AC
-		.byte $AD
-		.byte $AE
-		.byte $5D
-		.byte $5E
-		.byte $5D
-		.byte $5E
-		.byte $C1
-		.byte $24
-		.byte $C1
-		.byte $24
-		.byte $C6
-		.byte $C8
-		.byte $C7
-		.byte $C9
-		.byte $CA
-		.byte $CC
-		.byte $CB
-		.byte $CD
-		.byte $2A
-		.byte $2A
-		.byte $40
-		.byte $40
-		.byte $24
-		.byte $24
-		.byte $24
-		.byte $24
-		.byte $24
-		.byte $47
-		.byte $24
-		.byte $47
-		.byte $82
-		.byte $83
-		.byte $84
-		.byte $85
-		.byte $B4
-		.byte $B6
-		.byte $B5
-		.byte $B7
-		.byte $24
-		.byte $47
-		.byte $24
-		.byte $47
-		.byte $86
-		.byte $8A
-		.byte $87
-		.byte $8B
-		.byte $8E
-		.byte $91
-		.byte $8F
-		.byte $92
-		.byte $24
-		.byte $2F
-		.byte $24
-		.byte $3D
+  .byte $a2, $a2, $a3, $a3 ;vertical rope
+  .byte $99, $24, $99, $24 ;horizontal rope
+  .byte $24, $a2, $3e, $3f ;left pulley
+  .byte $5b, $5c, $24, $a3 ;right pulley
+  .byte $24, $24, $24, $24 ;blank used for balance rope
+  .byte $9d, $47, $9e, $47 ;castle top
+  .byte $47, $47, $27, $27 ;castle window left
+  .byte $47, $47, $47, $47 ;castle brick wall
+  .byte $27, $27, $47, $47 ;castle window right
+  .byte $a9, $47, $aa, $47 ;castle top w/ brick
+  .byte $9b, $27, $9c, $27 ;entrance top
+  .byte $27, $27, $27, $27 ;entrance bottom
+  .byte $52, $52, $52, $52 ;green ledge stump
+  .byte $80, $a0, $81, $a1 ;fence
+  .byte $be, $be, $bf, $bf ;tree trunk
+  .byte $75, $ba, $76, $bb ;mushroom stump top
+  .byte $ba, $ba, $bb, $bb ;mushroom stump bottom
+  .byte $45, $47, $45, $47 ;breakable brick w/ line 
+  .byte $47, $47, $47, $47 ;breakable brick 
+  .byte $45, $47, $45, $47 ;breakable brick (not used)
+  .byte $45, $47, $45, $47 ;brick with line (power-up)
+  .byte $45, $47, $45, $47 ;brick with line (vine)
+  .byte $45, $47, $45, $47 ;brick with line (star)
+  .byte $45, $47, $45, $47 ;brick with line (coins)
+  .byte $45, $47, $45, $47 ;brick with line (1-up)
+  .byte $47, $47, $47, $47 ;brick (power-up)
+  .byte $47, $47, $47, $47 ;brick (vine)
+  .byte $47, $47, $47, $47 ;brick (star)
+  .byte $47, $47, $47, $47 ;brick (coins)
+  .byte $47, $47, $47, $47 ;brick (1-up)
+  .byte $24, $24, $24, $24 ;hidden block (1 coin)
+  .byte $24, $24, $24, $24 ;hidden block (1-up)
+  .byte $24, $24, $24, $24 ;hidden block (power-up)
+  .byte $ab, $ac, $ad, $ae ;solid block (3-d block)
+  .byte $5d, $5e, $5d, $5e ;solid block (white wall)
+  .byte $c1, $24, $c1, $24 ;bridge
+  .byte $c6, $c8, $c7, $c9 ;bullet bill cannon barrel
+  .byte $ca, $cc, $cb, $cd ;bullet bill cannon top
+  .byte $2a, $2a, $40, $40 ;bullet bill cannon bottom
+  .byte $24, $24, $24, $24 ;blank used for jumpspring
+  .byte $24, $47, $24, $47 ;half brick used for jumpspring
+  .byte $82, $83, $84, $85 ;solid block (water level, green rock)
+  .byte $b4, $b6, $b5, $b7 ;cracked rock terrain
+  .byte $24, $47, $24, $47 ;half brick (not used)
+  .byte $86, $8a, $87, $8b ;water pipe top
+  .byte $8e, $91, $8f, $92 ;water pipe bottom
+  .byte $24, $2f, $24, $3d ;flag ball (residual object)
+
 Palette2_MTiles:
-		.byte $24
-		.byte $24
-		.byte $24
-		.byte $35
-		.byte $36
-		.byte $25
-		.byte $37
-		.byte $25
-		.byte $24
-		.byte $38
-		.byte $24
-		.byte $24
-		.byte $24
-		.byte $24
-		.byte $39
-		.byte $24
-		.byte $3A
-		.byte $24
-		.byte $3B
-		.byte $24
-		.byte $3C
-		.byte $24
-		.byte $24
-		.byte $24
-		.byte $41
-		.byte $26
-		.byte $41
-		.byte $26
-		.byte $26
-		.byte $26
-		.byte $26
-		.byte $26
-		.byte $B0
-		.byte $B1
-		.byte $B2
-		.byte $B3
-		.byte $77
-		.byte $79
-		.byte $77
-		.byte $79
-		.byte $6B
-		.byte $70
-		.byte $2C
-		.byte $2D
-		.byte $6C
-		.byte $71
-		.byte $6D
-		.byte $72
-		.byte $6E
-		.byte $73
-		.byte $6F
-		.byte $74
+  .byte $24, $24, $24, $35 ;cloud left
+  .byte $36, $25, $37, $25 ;cloud middle
+  .byte $24, $38, $24, $24 ;cloud right
+  .byte $24, $24, $39, $24 ;cloud bottom left
+  .byte $3a, $24, $3b, $24 ;cloud bottom middle
+  .byte $3c, $24, $24, $24 ;cloud bottom right
+  .byte $41, $26, $41, $26 ;water/lava top
+  .byte $26, $26, $26, $26 ;water/lava
+  .byte $b0, $b1, $b2, $b3 ;cloud level terrain
+  .byte $77, $79, $77, $79 ;bowser's bridge
+
 Palette3_MTiles:
-		.byte $53
-		.byte $55
-		.byte $54
-		.byte $56
-		.byte $53
-		.byte $55
-		.byte $54
-		.byte $56
-		.byte $53
-		.byte $55
-		.byte $54
-		.byte $56
-		.byte $A5
-		.byte $A7
-		.byte $A6
-		.byte $A8
-		.byte $C2
-		.byte $C4
-		.byte $C3
-		.byte $C5
-		.byte $57
-		.byte $59
-		.byte $58
-		.byte $5A
-		.byte $7B
-		.byte $7D
-		.byte $7C
-		.byte $7E
+  .byte $53, $55, $54, $56 ;question block (coin)
+  .byte $53, $55, $54, $56 ;question block (power-up)
+  .byte $a5, $a7, $a6, $a8 ;coin
+  .byte $c2, $c4, $c3, $c5 ;underwater coin
+  .byte $57, $59, $58, $5a ;empty block
+  .byte $7b, $7d, $7c, $7e ;axe
 WaterPalette_MAYBE:
 		.byte $3F
 		.byte 0
@@ -2694,56 +2381,25 @@ unk_719B:
 		.byte $4E
 		.byte $E
 		.byte $4E
-unk_71BE:
 		.byte $4E
+
+FSceneDataOffsets:
 		.byte 0
 		.byte $D
 		.byte $1A
-unk_71C2:
-		.byte $86
-		.byte $87
-		.byte $87
-		.byte $87
-		.byte $87
-		.byte $87
-		.byte $87
-		.byte $87
-		.byte $87
-		.byte $87
-		.byte $87
-		.byte $6A
-		.byte $6A
-		.byte 0
-		.byte 0
-		.byte 0
-		.byte 0
-		.byte 0
-		.byte $45
-		.byte $47
-		.byte $47
-		.byte $47
-		.byte $47
-		.byte $47
-		.byte 0
-		.byte 0
-		.byte 0
-		.byte 0
-		.byte 0
-		.byte 0
-		.byte 0
-		.byte 0
-		.byte 0
-		.byte 0
-		.byte 0
-		.byte 0
-		.byte 0
-		.byte $86
-		.byte $87
-unk_71E9:
-		.byte $6A
-		.byte $6B
-		.byte $50
-		.byte $63
+		
+ForeSceneryData:
+   .byte $86, $87, $87, $87, $87, $87, $87   ;in water
+   .byte $87, $87, $87, $87, $6a, $6a
+
+   .byte $00, $00, $00, $00, $00, $45, $47   ;wall
+   .byte $47, $47, $47, $47, $00, $00
+
+   .byte $00, $00, $00, $00, $00, $00, $00   ;over water
+   .byte $00, $00, $00, $00, $86, $87
+
+TerrainMetatiles:
+      .byte $69, $6a, $52, $62
 unk_71ED:
 		.byte 0
 		.byte 0
@@ -2840,11 +2496,11 @@ loc_7266:
 
 		ldx ForegroundScenery
 		beq loc_727E
-		ldy unk_71BE,x
+		ldy FSceneDataOffsets-1,x
 		ldx #0
 loc_7270:
 
-		lda unk_71C2,y
+		lda ForeSceneryData,y
 		beq loc_7278
 		sta $6A1,x
 loc_7278:
@@ -2860,11 +2516,11 @@ loc_727E:
 		lda WorldNumber
 		cmp #7
 		bne loc_728F
-		lda #$63
+		lda #$62
 		jmp loc_7299
 loc_728F:
 
-		lda unk_71E9,y
+		lda TerrainMetatiles,y
 		ldy CloudTypeOverride
 		beq loc_7299
 		lda #$88
@@ -2908,7 +2564,7 @@ loc_72C7:
 		bne loc_72DB
 		cpx #$B
 		bne loc_72DB
-		lda #$6B
+		lda #$6A
 		sta unk_7
 loc_72DB:
 
@@ -2934,7 +2590,7 @@ loc_72F1:
 		rol
 		tay
 		lda $6A1,x
-		cmp unk_7315,y
+		cmp BlockBuffLowBounds,y
 		bcs loc_7306
 		lda #0
 loc_7306:
@@ -2949,11 +2605,8 @@ loc_7306:
 		cpx #$D
 		bcc loc_72F1
 		rts
-unk_7315:
-		.byte $10
-		.byte $4F
-		.byte $88
-		.byte $C0
+BlockBuffLowBounds:
+		.byte $10, $51, $88, $c0
 ProcessAreaData:
 
 		ldx #2
@@ -3067,13 +2720,13 @@ loc_73C4:
 		bne loc_73D4
 		lda #0
 		sta unk_7
-		lda #$36
+		lda #$31
 		bne loc_7427
 loc_73D4:
 
 		cmp #$D
 		bne loc_73F3
-		lda #$28
+		lda #$25
 		sta unk_7
 		iny
 		lda (AreaDataLow),y
@@ -3204,11 +2857,8 @@ loc_7470:
 		.word QuestionBlock
 		.word QuestionBlock
 		.word QuestionBlock
-		.word QuestionBlock
 		.word Hidden1UpBlock
 		.word QuestionBlock
-		.word QuestionBlock
-		.word BrickWithItem
 		.word BrickWithItem
 		.word BrickWithItem
 		.word BrickWithItem
@@ -3229,8 +2879,6 @@ loc_7470:
 		.word AreaFrenzy
 		.word AreaFrenzy
 		.word LoopCmdE
-		.word MakeItWindy
-		.word MakeItNotWindy
 		.word AlterAreaAttributes
 
 AlterAreaAttributes:
@@ -3362,26 +3010,28 @@ loc_75CA:
 		lda #$18
 		jmp loc_75FC
 MushroomLedge:
-
-		jsr ChkLrgObjLength
-		sty byte_6
-		bcc loc_75E2
-		lda AreaObjectLength,x
-		lsr
-		sta MushroomLedgeHalfLen,x
-		lda #$8A
-		jmp loc_75FC
-loc_75E2:
-
-		lda #$8C
-		ldy AreaObjectLength,x
-		beq loc_75FC
-		lda MushroomLedgeHalfLen,x
-		sta byte_6
-		ldx unk_7
-		lda #$8B
-		sta MetatileBuffer,x
-		rts
+          jsr ChkLrgObjLength        ;get shroom dimensions
+          sty $06                    ;store length here for now
+          bcc EndMushL
+          lda AreaObjectLength,x     ;divide length by 2 and store elsewhere
+          lsr
+          sta MushroomLedgeHalfLen,x
+          lda #$19                   ;render start of mushroom
+          jmp loc_75FC
+EndMushL: lda #$1b                   ;if at the end, render end of mushroom
+          ldy AreaObjectLength,x
+          beq loc_75FC
+          lda MushroomLedgeHalfLen,x ;get divided length and store where length
+          sta $06                    ;was stored originally
+          ldx $07
+          lda #$1a
+          sta MetatileBuffer,x       ;render middle of mushroom
+          cpy $06                    ;are we smack dab in the center?
+          bne MushLExit              ;if not, branch to leave
+          inx
+          lda #$4f
+          sta MetatileBuffer,x       ;render stem top of mushroom underneath the middle
+          lda #$50
 loc_75F6:
 
 		inx
@@ -3409,6 +3059,7 @@ loc_7614:
 
 		lda unk_7603,y
 		sta MetatileBuffer
+MushLExit:		
 		rts
 unk_761B:
 		.byte 0
@@ -3527,7 +3178,7 @@ loc_7693:
 		rts
 loc_76B5:
 
-		ldy #$50
+		ldy #$52
 		sty byte_6AB
 locret_76BA:
 
@@ -3537,9 +3188,9 @@ WaterPipe:
 		jsr GetLrgObjAttrib
 		ldy AreaObjectLength,x
 		ldx unk_7
-		lda #$6D
+		lda #$6C
 		sta MetatileBuffer,x
-		lda #$6E
+		lda #$6D
 		sta unk_6A2,x
 		rts
 IntroPipe:
@@ -3567,15 +3218,11 @@ SidePipeShaftData:
 		.byte 0
 		.byte 0
 SidePipeTopPart:
-		.byte $15
-		.byte $1B
-		.byte $1A
-		.byte $19
-SidePipeBottomPart:
-		.byte $15
-		.byte $1E
-		.byte $1D
-		.byte $1C
+      .byte $15, $1e  ;top part of sideways part of pipe
+      .byte $1d, $1c
+SidePipeBottomPart: 
+      .byte $15, $21  ;bottom part of sideways part of pipe
+      .byte $20, $1f
 ExitPipe:
 
 		ldy #3
@@ -3731,23 +3378,23 @@ Bridge_Low_NODIRECT:
 		sta MetatileBuffer,x
 		inx
 		ldy #0
-		lda #$64
+		lda #$63
 		jmp RenderUnderPart
 FlagBalls_Residual:
 
 		jsr GetLrgObjAttrib
 		ldx #2
-		lda #$6F
+		lda #$6E
 		jmp RenderUnderPart
 FlagpoleObject:
 
-		lda #$21
+		lda #$24
 		sta MetatileBuffer
 		ldx #1
 		ldy #8
-		lda #$22
+		lda #$25
 		jsr RenderUnderPart
-		lda #$62
+		lda #$61
 		sta byte_6AB
 		jsr GetAreaObjXPosition
 		sec
@@ -3786,10 +3433,7 @@ DrawRope:
 		lda #$40
 		jmp RenderUnderPart
 unk_7835:
-		.byte $C4
-		.byte $C3
-		.byte $C3
-		.byte $C3
+		.byte $c3, $c2, $c2, $c2
 RowOfCoins:
 
 		ldy AreaType
@@ -3802,7 +3446,7 @@ C_ObjectRow:
 		.byte 7
 		.byte 8
 C_ObjectMetatile:
-		.byte $C6
+		.byte $C5
 		.byte $C
 		.byte $89
 CastleBridgeObj:
@@ -3824,22 +3468,15 @@ EmptyBlock:
 
 		jsr GetLrgObjAttrib
 		ldx unk_7
-		lda #$C5
+		lda #$C4
 ColObj:
 
 		ldy #0
 		jmp RenderUnderPart
 SolidBlockMetatiles:
-		.byte $6A
-		.byte $62
-		.byte $62
-		.byte $63
+		.byte $69, $61, $61, $62
 BrickMetatiles:
-		.byte $1F
-		.byte $4F
-		.byte $50
-		.byte $50
-		.byte $88
+		.byte $22, $51, $52, $52, $88
 RowOfBricks:
 
 		ldy AreaType
@@ -3884,17 +3521,17 @@ BulletBillCannon:
 
 		jsr GetLrgObjAttrib
 		ldx unk_7
+		lda #$64
+		sta $6A1,x
+		inx
+		dey
+		bmi loc_78CC
 		lda #$65
 		sta $6A1,x
 		inx
 		dey
 		bmi loc_78CC
 		lda #$66
-		sta $6A1,x
-		inx
-		dey
-		bmi loc_78CC
-		lda #$67
 		jsr RenderUnderPart
 loc_78CC:
 
@@ -3946,7 +3583,7 @@ loc_7908:
 		ldx unk_78F5,y
 		lda unk_78EC,y
 		tay
-		lda #$62
+		lda #$61
 		jmp RenderUnderPart
 Jumpspring:
 
@@ -3966,9 +3603,9 @@ Jumpspring:
 		sty $B6,x
 		inc $F,x
 		ldx unk_7
-		lda #$68
+		lda #$67
 		sta $6A1,x
-		lda #$69
+		lda #$68
 		sta $6A2,x
 locret_7949:
 
@@ -3996,7 +3633,7 @@ BrickWithItem:
 		ldy AreaType
 		dey
 		beq loc_7971
-		lda #6
+		lda #5
 loc_7971:
 
 		clc
@@ -4064,12 +3701,16 @@ RenderUnderPart:
 		beq loc_79DE
 		cpy #$17
 		beq loc_79E1
-		cpy #$8B
+		cpy #$1a
 		beq loc_79E1
 		cpy #$C0
 		beq loc_79DE
 		cpy #$C0
 		bcs loc_79E1
+		cpy #$6a
+		bne loc_79DE
+		cmp #$50
+		beq loc_79E1
 loc_79DE:
 
 		sta MetatileBuffer,x
@@ -4640,8 +4281,7 @@ EnterSidePipe:
 loc_7D86:
 
 		tya
-		jsr AutoControlPlayer
-		rts
+		jmp AutoControlPlayer
 PlayerChangeSize:
 
 		lda TimerControl
@@ -4739,6 +4379,9 @@ NoFPObj:
 		inc GameEngineSubroutine
 		rts
 
+Hidden1UpCoinAmts:
+      .byte $14, $1E, $14, $1B, $13, $18, $13, $63
+	  
 PlayerEndLevel:
 		; jsr Enter_EndLevel
 		lda #1
@@ -4775,21 +4418,11 @@ loc_7E48:
 		bne loc_7E66
 		ldy WorldNumber
 		lda CoinTallyFor1Ups
-		cmp #$A
+		cmp Hidden1UpCoinAmts,y
 		bcc loc_7E66
 		inc Hidden1UpFlag
 loc_7E66:
-
 		inc AreaNumber
-		lda WorldNumber
-		cmp #8
-		bne loc_7E7F
-		lda LevelNumber
-		cmp #4
-		bne loc_7E7F
-		lda #0
-		sta LevelNumber
-		sta AreaNumber
 loc_7E7F:
 
 		jsr Enter_LL_LoadAreaPointer
@@ -5709,18 +5342,17 @@ loc_8450:
 		tya
 		pha
 		lda #$F4
+		ldy IsPlayingExtendedWorlds
+		beq SetJSF
 		ldy WorldNumber
-		cpy #1
-		beq loc_8479
-		cpy #2
-		beq loc_8479
-		cpy #6
-		bne loc_847B
-loc_8479:
-
-		lda #$E0
-loc_847B:
-
+		cpy #$01
+		beq @Shift
+		cpy #$02
+		bne @Done
+@Shift:
+		lda #$e0
+@Done:
+SetJSF:
 		sta JumpspringForce
 		pla
 		tay
@@ -5833,7 +5465,7 @@ loc_8526:
 		bcs loc_8544
 		lda (6),y
 		bne loc_8544
-		lda #$23
+		lda #$26
 		sta (6),y
 loc_8544:
 
@@ -5866,7 +5498,7 @@ loc_856F:
 
 		tay
 		lda (6),y
-		cmp #$23
+		cmp #$26
 		bne byte_857A
 		lda #0
 		sta (6),y
@@ -6353,9 +5985,9 @@ loc_88DB:
 		bcc loc_8902
 		ldy #$11
 		sty $26,x
-		lda #$C5
+		lda #$C4
 		ldy TMP_0
-		cpy #$56
+		cpy #$57
 		beq loc_88ED
 		cpy #$5C
 		bne loc_8902
@@ -6370,7 +6002,7 @@ loc_88FA:
 
 		lda BrickCoinTimer
 		bne loc_8901
-		ldy #$C5
+		ldy #$C4
 loc_8901:
 
 		tya
@@ -6379,7 +6011,7 @@ loc_8902:
 		sta $3E8,x
 		jsr sub_8945
 		ldy byte_2
-		lda #$20
+		lda #$23
 		sta (6),y
 		lda #$10
 		sta BlockBounceTimer
@@ -6443,21 +6075,18 @@ sub_895C:
 		jsr BlockBumpedChk
 		bcc locret_89B3
 		tya
-		cmp #$D
+		cmp #$a
 		bcc loc_897E
-		sbc #6
+		sbc #5
 loc_897E:
 
 		jsr JumpEngine
 		.word MushFlowerBlock
-		.word PoisonMushroom_MAYBE_NODIRECT+1
 		.word CoinBlock
 		.word CoinBlock
 		.word ExtraLifeMushBlock_NODIRECT+1
-		.word PoisonMushroom_MAYBE_NODIRECT+1
 		.word MushFlowerBlock
 		.word MushFlowerBlock
-		.word PoisonMushroom_MAYBE_NODIRECT+1
 		.word VineBlock
 		.word StarBlock_NODIRECT+1
 		.word CoinBlock
@@ -6485,13 +6114,12 @@ locret_89B3:
 
 		rts
 BrickQBlockMetatiles:
-		.byte $C1
-		.byte $C2
-		.byte $C0, $5E,	$5F, $60, $61, $52, $53, $54, $55, $56
-		.byte $57, $58,	$59, $5A, $5B, $5C, $5D
+      .byte $C1,$C0,$5E,$5F,$60
+      .byte $54,$55,$56,$57,$58
+      .byte $59,$5A,$5B,$5C,$5D
 BlockBumpedChk:
 
-		ldy #$12
+		ldy #$0e
 loc_89C9:
 
 		cmp BrickQBlockMetatiles,y
@@ -6527,7 +6155,7 @@ CheckTopOfBlock:
 		sta byte_2
 		tay
 		lda (6),y
-		cmp #$C3
+		cmp #$C2
 		bne locret_8A11
 		lda #0
 		sta (6),y
@@ -6921,16 +6549,16 @@ locret_8C46:
 
 		rts
 LoopCmdWorldNumber:
-      .byte $03, $03, $06, $06, $06, $06, $06, $06, $07, $07
+  .byte $03, $03, $06, $06, $06, $06, $06, $06, $07, $07
 
 LoopCmdPageNumber:
-      .byte $05, $09, $04, $05, $06, $08, $09, $0a, $05, $0b
+  .byte $05, $09, $04, $05, $06, $08, $09, $0A, $05, $0B
 
 LoopCmdYPosition:
-      .byte $b0, $40, $40, $40, $40, $40, $80, $80, $f0, $b0
+  .byte $B0, $40, $40, $40, $40, $40, $80, $80, $F0, $B0
 
 LoopCmdMultiLoopPassCntr:
-	.byte 1, 1, 3, 3, 3, 3, 3, 3, 1, 1
+  .byte $01, $01, $03, $03, $03, $03, $03, $03, $01, $01
 
 sub_8C77:
 
@@ -6968,7 +6596,7 @@ ProcLoopCommand:
 		beq loc_8D0C
 		lda CurrentColumnPos
 		bne loc_8D0C
-		ldy #$C
+		ldy #$A
 FindLoop:
 
 		dey
@@ -7123,21 +6751,20 @@ loc_8DCE:
 loc_8DDA:
 
 		cmp #6
-		bne loc_8DE5
+		bne StrID
 		ldy PrimaryHardMode
-		beq loc_8DE5
-		lda #2
-loc_8DE5:
-
-		sta $16,x
+		beq StrID
+        ldy IsPlayingExtendedWorlds
+        bne StrID
+StrID:	sta $16,x
 		lda #1
 		sta $F,x
 		jsr sub_8E03
 		lda $F,x
 		bne loc_8E42
 		rts
+		
 loc_8DF3:
-
 		lda EnemyFrenzyBuffer
 		bne loc_8E01
 		lda VineFlagOffset
@@ -7452,10 +7079,7 @@ loc_8FBE:
 		jsr sub_8F75
 		lda #$20
 		ldy IsPlayingExtendedWorlds
-		bne loc_8FD7
-		ldy WorldNumber
-		cpy #6
-		bcc loc_8FD9
+		beq loc_8FD9
 loc_8FD7:
 
 		lda #$60
@@ -8024,9 +7648,10 @@ loc_932C:
 		ldy #6
 		lda PrimaryHardMode
 		beq loc_9340
+		lda IsPlayingExtendedWorlds
+		bne loc_9340
 		ldy #2
 loc_9340:
-
 		pla
 loc_9341:
 
@@ -8270,7 +7895,6 @@ PosPlatform:
 		sta Enemy_PageLoc,x
 		rts
 EndOfEnemyInitCode:
-
 		rts
 RunEnemyObjectsCore:
 
@@ -8619,6 +8243,8 @@ loc_96FD:
 		dey
 		lda PrimaryHardMode
 		beq loc_9714
+		lda IsPlayingExtendedWorlds
+		bne loc_9714
 		iny
 		iny
 loc_9714:
@@ -10076,7 +9702,7 @@ MovePiranhaPlant:
 loc_9FFB:
 
 		lda TMP_0
-		cmp WRAM_PiranhaPlantDist
+		cmp #$13
 		bcc loc_A03D
 loc_A001:
 
@@ -11559,7 +11185,7 @@ loc_A928:
 		jmp DoFootCheck
 
 SolidOrClimb:
-		cmp #$23
+		cmp #$26
 		beq NYSpd
 		lda #2
 		sta Square1SoundQueue
@@ -11593,7 +11219,7 @@ ChkFootMTile:
 		bcs DoPlayerSideCheck
 		ldy Player_Y_Speed
 		bmi DoPlayerSideCheck
-		cmp #$C6
+		cmp #$C5
 		bne loc_A99B
 		jmp HandleAxeMetatile
 
@@ -11641,9 +11267,9 @@ loc_A9D4:
 		bcs locret_AA09
 		jsr BlockBufferColli_Side+1
 		beq loc_A9F3
-		cmp #$19
+		cmp #$1c
 		beq loc_A9F3
-		cmp #$6D
+		cmp #$6c
 		beq loc_A9F3
 		jsr CheckForClimbMTiles
 		bcc loc_AA0A
@@ -11687,9 +11313,9 @@ loc_AA29:
 		ldy PlayerFacingDir
 		dey
 		bne loc_AA6D
-		cmp #$6E
+		cmp #$6D
 		beq loc_AA3C
-		cmp #$1C
+		cmp #$1F
 		bne loc_AA6D
 loc_AA3C:
 
@@ -11785,9 +11411,9 @@ ExHC:
 		rts
 ChkForFlagpole:
 
-		cmp #$21
+		cmp #$24
 		beq FlagpoleCollision
-		cmp #$22
+		cmp #$25
 		bne loc_AAFD
 FlagpoleCollision:
 
@@ -11832,7 +11458,7 @@ loc_AAF6:
 		jmp loc_AB0B
 loc_AAFD:
 
-		cmp #$23
+		cmp #$26
 		bne loc_AB0B
 		lda SprObject_Y_Position
 		cmp #$20
@@ -11880,8 +11506,6 @@ sub_AB40:
 		cmp #$5F
 		beq locret_AB4E
 		cmp #$60
-		beq locret_AB4E
-		cmp #$61
 locret_AB4E:
 
 		rts
@@ -11903,9 +11527,9 @@ locret_AB6A:
 		rts
 sub_AB6B:
 
-		cmp #$68
+		cmp #$67
 		beq loc_AB74
-		cmp #$69
+		cmp #$68
 		clc
 		bne locret_AB75
 loc_AB74:
@@ -11981,20 +11605,14 @@ loc_AC0A:
 		sta Player_CollisionBits
 		rts
 SolidMTileUpperExt:
-		.byte $10
-		.byte $62
-		.byte $88
-		.byte $C5
+		.byte $10, $61, $88, $c4
 sub_AC18:
 
 		jsr GetMTileAttrib
 		cmp SolidMTileUpperExt,x
 		rts
 ClimbMTileUpperExt:
-		.byte $21
-		.byte $6F
-		.byte $8D
-		.byte $C7
+		.byte $24, $6e, $8a, $c6
 CheckForClimbMTiles:
 
 		jsr GetMTileAttrib
@@ -12002,9 +11620,9 @@ CheckForClimbMTiles:
 		rts
 CheckForCoinMTiles:
 
-		cmp #$C3
+		cmp #$C2
 		beq loc_AC34
-		cmp #$C4
+		cmp #$C3
 		beq loc_AC34
 		clc
 		rts
@@ -12082,7 +11700,7 @@ loc_AC88:
 
 		jsr sub_AE4B
 		beq loc_AC85
-		cmp #$20
+		cmp #$23
 		bne loc_ACFD
 		lda $16,x
 		cmp #$15
@@ -12356,7 +11974,7 @@ loc_AE1B:
 
 		jsr sub_AE44
 		beq loc_AE3D
-		cmp #$20
+		cmp #$23
 		bne loc_AE2C
 sub_AE24:
 
@@ -12386,19 +12004,17 @@ sub_AE44:
 		jmp sub_B026
 sub_AE4B:
 
-		cmp #$23
+		cmp #$26
+		beq locret_AE65
+		cmp #$C2
 		beq locret_AE65
 		cmp #$C3
 		beq locret_AE65
-		cmp #$C4
-		beq locret_AE65
-		cmp #$5E
+		cmp #$5e
 		beq locret_AE65
 		cmp #$5F
 		beq locret_AE65
 		cmp #$60
-		beq locret_AE65
-		cmp #$61
 locret_AE65:
 
 		rts
@@ -13351,305 +12967,66 @@ loc_B3EA:
 
 		jmp loc_B83F
 EnemyGraphicsTable:
-		.byte $FC
-		.byte $FC
-		.byte $AA
-byte_B3F0:
-		.byte $AB
-		.byte $AC
-		.byte $AD
-		.byte $FC
-		.byte $FC
-		.byte $AE
-		.byte $AF
-		.byte $B0
-		.byte $B1
-		.byte $FC
-		.byte $A5
-		.byte $A6
-		.byte $A7
-		.byte $A8
-		.byte $A9
-		.byte $FC
-		.byte $A0
-		.byte $A1
-		.byte $A2
-		.byte $A3
-		.byte $A4
-		.byte $69
-		.byte $A5
-		.byte $6A
-		.byte $A7
-		.byte $A8
-		.byte $A9
-		.byte $6B
-		.byte $A0
-		.byte $6C
-		.byte $A2
-		.byte $A3
-		.byte $A4
-		.byte $FC
-		.byte $FC
-		.byte $96
-		.byte $97
-		.byte $98
-		.byte $99
-		.byte $FC
-		.byte $FC
-		.byte $9A
-		.byte $9B
-		.byte $9C
-		.byte $9D
-		.byte $FC
-		.byte $FC
-		.byte $8F
-		.byte $8E
-		.byte $8E
-		.byte $8F
-		.byte $FC
-		.byte $FC
-		.byte $95
-		.byte $94
-		.byte $94
-		.byte $95
-		.byte $FC
-		.byte $FC
-		.byte $DC
-		.byte $DC
-		.byte $DF
-		.byte $DF
-		.byte $DC
-		.byte $DC
-		.byte $DD
-		.byte $DD
-		.byte $DE
-		.byte $DE
-		.byte $FC
-		.byte $FC
-		.byte $B2
-		.byte $B3
-		.byte $B4
-		.byte $B5
-		.byte $FC
-		.byte $FC
-		.byte $B6
-		.byte $B3
-		.byte $B7
-		.byte $B5
-		.byte $FC
-		.byte $FC
-		.byte $70
-		.byte $71
-		.byte $72
-		.byte $73
-		.byte $FC
-		.byte $FC
-		.byte $6E
-		.byte $6E
-		.byte $6F
-		.byte $6F
-		.byte $FC
-		.byte $FC
-		.byte $6D
-		.byte $6D
-		.byte $6F
-		.byte $6F
-		.byte $FC
-		.byte $FC
-		.byte $6F
-		.byte $6F
-		.byte $6E
-		.byte $6E
-		.byte $FC
-		.byte $FC
-		.byte $6F
-		.byte $6F
-		.byte $6D
-		.byte $6D
-		.byte $FC
-		.byte $FC
-		.byte $F4
-		.byte $F4
-		.byte $F5
-		.byte $F5
-		.byte $FC
-		.byte $FC
-		.byte $F4
-		.byte $F4
-		.byte $F5
-		.byte $F5
-		.byte $FC
-		.byte $FC
-		.byte $F5
-		.byte $F5
-		.byte $F4
-		.byte $F4
-		.byte $FC
-		.byte $FC
-		.byte $F5
-		.byte $F5
-		.byte $F4
-		.byte $F4
-		.byte $FC
-		.byte $FC
-		.byte $FC
-		.byte $FC
-		.byte $EF
-		.byte $EF
-		.byte $B9
-		.byte $B8
-		.byte $BB
-		.byte $BA
-		.byte $BC
-		.byte $BC
-		.byte $FC
-		.byte $FC
-		.byte $BD
-		.byte $BD
-		.byte $BC
-		.byte $BC
-		.byte $76
-		.byte $79
-		.byte $77
-		.byte $77
-		.byte $78
-		.byte $78
-		.byte $CD
-		.byte $CD
-		.byte $CE
-		.byte $CE
-		.byte $CF
-		.byte $CF
-		.byte $7D
-		.byte $7C
-		.byte $D1
-		.byte $8C
-		.byte $D3
-		.byte $D2
-		.byte $7D
-		.byte $7C
-		.byte $89
-		.byte $88
-		.byte $8B
-		.byte $8A
-		.byte $D5
-		.byte $D4
-		.byte $E3
-		.byte $E2
-		.byte $D3
-		.byte $D2
-		.byte $D5
-		.byte $D4
-		.byte $E3
-		.byte $E2
-		.byte $8B
-		.byte $8A
-		.byte $E5
-		.byte $E5
-		.byte $E6
-		.byte $E6
-		.byte $EB
-		.byte $EB
-		.byte $EC
-		.byte $EC
-		.byte $ED
-		.byte $ED
-		.byte $EB
-		.byte $EB
-		.byte $FC
-		.byte $FC
-		.byte $D0
-		.byte $D0
-		.byte $D7
-		.byte $D7
-		.byte $BF
-		.byte $BE
-		.byte $C1
-		.byte $C0
-		.byte $C2
-		.byte $FC
-		.byte $C4
-		.byte $C3
-		.byte $C6
-		.byte $C5
-		.byte $C8
-		.byte $C7
-		.byte $BF
-		.byte $BE
-		.byte $CA
-		.byte $C9
-		.byte $C2
-		.byte $FC
-		.byte $C4
-		.byte $C3
-		.byte $C6
-		.byte $C5
-		.byte $CC
-		.byte $CB
-		.byte $FC
-		.byte $FC
-		.byte $E8
-		.byte $E7
-		.byte $EA
-		.byte $E9
-		.byte $F2
-		.byte $F2
-		.byte $F3
-		.byte $F3
-		.byte $F2
-		.byte $F2
-		.byte $F1
-		.byte $F1
-		.byte $F1
-		.byte $F1
-		.byte $FC
-		.byte $FC
-		.byte $F0
-		.byte $F0
-		.byte $FC
-		.byte $FC
-		.byte $FC
-		.byte $FC
+		  .byte $fc, $fc, $aa, $ab, $ac, $ad ;buzzy beetle
+		  .byte $fc, $fc, $ae, $af, $b0, $b1
+		  .byte $fc, $a5, $a6, $a7, $a8, $a9 ;koopa troopa
+		  .byte $fc, $a0, $a1, $a2, $a3, $a4
+		  .byte $69, $a5, $6a, $a7, $a8, $a9 ;koopa paratroopa
+		  .byte $6b, $a0, $6c, $a2, $a3, $a4
+		  .byte $fc, $fc, $96, $97, $98, $99 ;spiny
+		  .byte $fc, $fc, $9a, $9b, $9c, $9d
+		  .byte $fc, $fc, $8f, $8e, $8e, $8f ;spiny egg
+		  .byte $fc, $fc, $95, $94, $94, $95
+		  .byte $fc, $fc, $dc, $dc, $df, $df ;bloober
+		  .byte $dc, $dc, $dd, $dd, $de, $de
+		  .byte $fc, $fc, $b2, $b3, $b4, $b5 ;cheep-cheep
+		  .byte $fc, $fc, $b6, $b3, $b7, $b5
+		  .byte $fc, $fc, $70, $71, $72, $73 ;goomba
+		  .byte $fc, $fc, $6e, $6e, $6f, $6f ;koopa shell (upside-down)
+		  .byte $fc, $fc, $6d, $6d, $6f, $6f
+		  .byte $fc, $fc, $6f, $6f, $6e, $6e ;koopa shell
+		  .byte $fc, $fc, $6f, $6f, $6d, $6d
+		  .byte $fc, $fc, $f4, $f4, $f5, $f5 ;buzzy beetle shell (upside-down)
+		  .byte $fc, $fc, $f4, $f4, $f5, $f5
+		  .byte $fc, $fc, $f5, $f5, $f4, $f4 ;buzzy beetle
+		  .byte $fc, $fc, $f5, $f5, $f4, $f4
+		  .byte $fc, $fc, $fc, $fc, $ef, $ef ;defeated goomba
+		  .byte $b9, $b8, $bb, $ba, $bc, $bc ;lakitu
+		  .byte $fc, $fc, $bd, $bd, $bc, $bc
+		  .byte $76, $79, $77, $77, $78, $78 ;princess/door to princess's room
+		  .byte $cd, $7a, $ce, $7b, $cf, $ee ;ann retainer replacement
+		  .byte $7d, $7c, $d1, $8c, $d3, $d2 ;hammer bro
+		  .byte $7d, $7c, $89, $88, $8b, $8a
+		  .byte $d5, $d4, $e3, $e2, $d3, $d2
+		  .byte $d5, $d4, $e3, $e2, $8b, $8a
+		  .byte $e5, $e5, $e6, $e6, $eb, $eb ;piranha plant
+		  .byte $ec, $ec, $ed, $ed, $eb, $eb
+		  .byte $fc, $fc, $d0, $d0, $d7, $d7 ;podoboo
+		  .byte $bf, $be, $c1, $c0, $c2, $fc ;bowser front
+		  .byte $c4, $c3, $c6, $c5, $c8, $c7 ;bowser rear
+		  .byte $bf, $be, $ca, $c9, $c2, $fc ;front frame 2
+		  .byte $c4, $c3, $c6, $c5, $cc, $cb ;rear frame 2
+		  .byte $fc, $fc, $e8, $e7, $ea, $e9 ;bullet bill
+		  .byte $f2, $f2, $f3, $f3, $f2, $f2 ;jumpspring
+		  .byte $f1, $f1, $f1, $f1, $fc, $fc
+		  .byte $f0, $f0, $fc, $fc, $fc, $fc
 EnemyGfxTableOffsets:
-		.byte $C
-		.byte $C
-		.byte 0
-		.byte $C
-		.byte $C0
-		.byte $A8
-		.byte $54
-		.byte $3C
-		.byte $EA
-		.byte $18
-		.byte $48
-		.byte $48
-		.byte $CC
-		.byte $C0
-		.byte $18
-		.byte $18
-		.byte $18
-		.byte $90
-		.byte $24
-		.byte $FF
-		.byte $48
-		.byte $9C
-		.byte $D2
-		.byte $D8
-		.byte $F0
-		.byte $F6
-		.byte $FC
+		  .byte $0c, $0c, $00, $0c, $c0, $a8, $54, $3c
+		  .byte $ea, $18, $48, $48, $cc, $c0, $18, $18
+		  .byte $18, $90, $24, $ff, $48, $9c, $d2, $d8
+		  .byte $f0, $f6, $fc
+		  
 EnemyAnimTimingBMask:
 		.byte 8
 		.byte $18
 JumpspringFrameOffsets:
-		.byte $18
-		.byte $19
-		.byte $1A
-		.byte $19
-		.byte $18
+		.byte $18, $19, $1a, $19, $18
 EnemyGfxHandler:
-
+		lda #$00
+		sta $077c
 		lda #2
+		ldy IsPlayingExtendedWorlds
+		beq loc_B53E
 		ldy WorldNumber
 		cpy #1
 		beq loc_B53D
@@ -13912,6 +13289,7 @@ CheckToAnimateEnemy:
 		lda WorldNumber
 		cmp #7
 		bcs loc_B701
+		inc $077c
 		ldx #$A2
 		bne loc_B701
 CheckForSecondFrame:
@@ -13955,6 +13333,8 @@ loc_B71B:
 loc_B731:
 		jmp loc_B83F
 loc_B734:
+		lda $077c
+		bne loc_B731
 		lda VerticalFlipFlag
 		beq loc_B77A
 		lda $202,y
@@ -14206,7 +13586,7 @@ loc_B8C2:
 loc_B8E5:
 
 		lda $3E8,x
-		cmp #$C5
+		cmp #$C4
 		bne loc_B910
 		lda #$87
 		iny
@@ -15582,7 +14962,7 @@ FDSResetZero:
 		rts
 
 SWAPDATA_AreaDataOfsLoopback:
-      .byte $12, $36, $0e, $0e, $0e, $32, $32, $32, $0a, $26, $40
+      .byte $12, $36, $0E, $0E, $0E, $32, $32, $32, $0C, $54 
 
 GameMenuRoutine_NEW:
 GameMenuRoutineInner_NEW:
@@ -16380,8 +15760,8 @@ PrintAndPatchSoundEngine:
 		;sta VOLDST_PatchSoundEngineHigh
 		;lda #$5F
 		;sta VOLDST_PatchSoundEngineLow
-		lda #1
-		sta AreaMusicQueue
+		lda #VictoryMusic
+		sta EventMusicQueue
 		lda #0
 		sta Left_Right_Buttons
 		sta NumberOfPlayers
@@ -16401,8 +15781,8 @@ AlternatePrintVictoryMessages:
 		iny
 		cpy #5
 		bne @noeventmusic
-		lda #4
-		sta EventMusicQueue
+		;lda #4
+		;sta EventMusicQueue
 @noeventmusic:
 		tya
 		clc
@@ -16539,7 +15919,7 @@ loc_C712:
 
 XXX_SomethingOrOther:
 		jsr MoveShitheads
-		lda $608
+		lda EventMusicBuffer
 		bne locret_C737
 		lda IsPlayingExtendedWorlds
 		bne RestoreSoundEngine
