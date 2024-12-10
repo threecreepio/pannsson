@@ -857,13 +857,12 @@ PracticeOnFrameInner:
 		lda OperMode_Task
 		cmp #$03
 		bmi @exit
+		jmp PauseMenu
 @nippleexit:
 		lda OperMode_Task
 		cmp #$05
 		bmi @exit
 @check_pause:
-		; TODO RENABLE
-		; jsr HandleRestarts ; Wont return if it did something
 		jmp PauseMenu
 @exit:
 		rts
