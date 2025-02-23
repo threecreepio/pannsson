@@ -850,6 +850,7 @@ begin_save:
 		lda WRAM_DelaySaveFrames
 		sta WRAM_SaveFramesLeft
 		lda #0
+		sta IRQUpdateFlag
 		sta SND_MASTERCTRL_REG
 		rts
 
@@ -867,6 +868,7 @@ begin_load:
 		lda WRAM_DelaySaveFrames
 		sta WRAM_SaveFramesLeft
 		lda #$00
+		sta IRQUpdateFlag
 		sta SND_MASTERCTRL_REG
 @invalid_save:
 		rts
@@ -1116,6 +1118,7 @@ LoadState:
 		sta WRAM_LostStart, x
 		dex
 		bpl @copy_lost
+
 		lda GamePauseStatus
 		ora #2
 		sta GamePauseStatus
@@ -1124,6 +1127,7 @@ LoadState:
 		sta WRAM_PracticeFlags
 		lda #0
 		sta DisableScreenFlag
+		inc IRQUpdateFlag
 		; Controllers will be read again this frame. Reset them (very buggy otherwise ;)).
 		sta SavedJoypad1Bits
 		sta JoypadBitMask
@@ -1228,6 +1232,7 @@ SaveState:
 		sta WRAM_PracticeFlags
 		lda #0
 		sta DisableScreenFlag
+		inc IRQUpdateFlag
 		rts
 
 
