@@ -1,3 +1,5 @@
+.export NonMaskableInterrupt
+
 HEAP_SPRITE_OFF = 17*4
 PRINCESS_SPRITE_OFF = 53*4
 HAND_SPRITE_OFF = 52*4
@@ -22,8 +24,6 @@ RECORDS_TMP = $70A
 RECORDS_TMP_HI = $70B
 bcdNum = $70C
 ; bcdNum+1 = $70D
-ContraCodeX = $710
-ContraSoundFrames = $711
 
 CreditsIndex = $712
 PrincessThrowingTimer = $714
@@ -58,8 +58,9 @@ HEART_SPRITE = $18
 	.org $8000
 	.segment "bank1"
 
-Start:
-		lda #$00
+.export Start_I
+
+Start_I:
 		sta MirrorPPUCTRL
 		sta PPU_CTRL_REG1
 		;
@@ -121,7 +122,7 @@ dont_wipe_bank_selection:
 		;
 		; Enable NMI
 		;
-		lda #$90
+		lda #%10001000
 		sta MirrorPPUCTRL
 		sta PPU_CTRL_REG1
 hang:
@@ -167,6 +168,8 @@ screen_off:
 		stx PPU_SCROLL_REG ; No scrolling
 		stx PPU_SCROLL_REG
 		stx PPU_CTRL_REG2 ; No rendering
+		lda #$00
+		sta MMC3_IRQDisable
 		lda MirrorPPUCTRL
 		and #$7F
 		sta PPU_CTRL_REG1 ; No NMI
@@ -218,24 +221,7 @@ next_palette_entry:
 		
 		rts
 
-ContraCode:
-	.byte Up_Dir, Up_Dir, Down_Dir, Down_Dir, Left_Dir, Right_Dir, Left_Dir, Right_Dir, B_Button, A_Button, Start_Button
-ContraCodeEnd:
-
-ContraFinishSound:
-		dex
-		stx ContraSoundFrames
-		bne @wait_more
-		inc WRAM_IsContraMode
-		lda #BANK_ORG
-		jmp StartBank
-@wait_more:
-		jsr fax_update
-		rti
-
 NonMaskableInterrupt:
-		ldx ContraSoundFrames
-		bne ContraFinishSound
 		inc LoaderFrameCounter
 		lda MirrorPPUCTRL
 		and #$7F
@@ -263,7 +249,6 @@ NonMaskableInterrupt:
 		jsr run_settings
 		jmp exit_nmi
 @not_settings:
-		jsr run_records
 		jmp exit_nmi
 @run_menu:
 		;
@@ -332,12 +317,12 @@ NoChangeHead:
 		lda #$11
 		ldx #$ff
 @update_cloud_sprite:
-	pha
+		pha
 		lda ThrowDir
 		asl
 		asl
 		tay
-	pla
+		pla
 		clc
 		adc ThrowDir
  		; Cloud top left/right sprite
@@ -386,24 +371,16 @@ dont_update_cursor:
 		;
 		; Check contra code
 		;
-		ldx ContraCodeX
-		cmp ContraCode, X
 		bne @resetcode
 		inx
-		stx ContraCodeX
-		cpx #(ContraCodeEnd-ContraCode)
 		bne @handlein
 		ldx SEL_INDEX
 		bne @resetcode
-		ldx #$4F
-		stx ContraSoundFrames
 		ldx #0
 		lda #41
 		jsr fax_load_song
 		jmp exit_nmi
 @resetcode:
-		ldx #0
-		stx ContraCodeX
 @handlein:
 		cmp #Select_Button
 		beq @go_down
@@ -413,7 +390,7 @@ dont_update_cursor:
 		lda CursorY
 		ldx SEL_INDEX
 		inx 
-		cpx #4
+		cpx #2
 		bne @no_loop_around
 		ldx #0
 		lda #SEL_START_Y-16
@@ -431,8 +408,8 @@ dont_update_cursor:
 		ldx SEL_INDEX
 		dex
 		bpl @no_underflow
-		ldx #3
-		lda #SEL_START_Y+(4*16)
+		ldx #1
+		lda #SEL_START_Y+(2*16)
 @no_underflow:
 		sec
 		sbc #16
@@ -441,15 +418,10 @@ dont_update_cursor:
 		cmp #Start_Button
 		bne exit_nmi
 		ldx SEL_INDEX
-		cpx #2
+		cpx #1
 		beq @settings
-		cpx #3
-		beq @showrecords
 		lda bank_table, x
 		jmp StartBank
-@showrecords:
-		jsr enter_records
-		jmp exit_nmi
 @settings:
 		jsr enter_settings
 exit_nmi:
@@ -871,12 +843,10 @@ palette_star_shuffle:
 		.byte $0f, $0D, $16, $27 ; Princess cloud
 
 bank_table:
-		.byte BANK_ORG, BANK_SMBLL, BANK_SCEN
+		.byte BANK_ANN
 
 	.include "settings.asm"
-	.include "records.asm"
 	.include "smlsound.asm"
 	.include "faxsound.asm"
 
-practice_callgate
-control_bank
+.res $C000 - *, $FF

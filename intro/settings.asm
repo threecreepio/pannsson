@@ -2,7 +2,7 @@
 ; This hack is just inlined into intro.asm
 ;
 SETTINGS_MENU_PPU = $1FF3
-MAX_SETTING = 15
+MAX_SETTING = 10
 
 .macro draw_simple_at at, txt
 		.local @copy
@@ -139,32 +139,15 @@ get_uservar_ptr:
 		dex
 		bne @try_o1
 		; org0
-		lda #<WRAM_OrgUser0
+		lda #<WRAM_NipponUser0
 		sta $00
-		lda #>WRAM_OrgUser0
+		lda #>WRAM_NipponUser0
 		sta $01
 		rts
 @try_o1:
-		dex
-		bne @try_l0
-		; org1
-		lda #<WRAM_OrgUser1
+		lda #<WRAM_NipponUser1
 		sta $00
-		lda #>WRAM_OrgUser1
-		sta $01
-		rts
-@try_l0:
-		dex
-		bne @do_lost1
-		lda #<WRAM_LostUser0
-		sta $00
-		lda #>WRAM_LostUser0
-		sta $01
-		rts
-@do_lost1:
-		lda #<WRAM_LostUser1
-		sta $00
-		lda #>WRAM_LostUser1
+		lda #>WRAM_NipponUser1
 		sta $01
 		rts
 
@@ -176,74 +159,38 @@ _draw_user1org_opt:
 		jsr get_uservar_ptr
 		draw_hexopt_at 9, 1
 
-_draw_user0lost_opt:
-		jsr get_uservar_ptr
-		draw_hexopt_at 10, 1
-
-_draw_user1lost_opt:
-		jsr get_uservar_ptr
-		draw_hexopt_at 11, 1
-
 _draw_userdelay_opt:
 		lda #<WRAM_DelayUserFrames
 		sta $00
 		lda #>WRAM_DelayUserFrames
 		sta $01
-		draw_hexopt_at 12, 0
+		draw_hexopt_at 10, 0
 
 _draw_savedelay_opt:
 		lda #<WRAM_DelaySaveFrames
 		sta $00
 		lda #>WRAM_DelaySaveFrames
 		sta $01
-		draw_hexopt_at 13, 0
-
-_char_native: draw_simple_at 14, "NATIVE"
-_char_org: draw_simple_at 14, "ORG   "
-_char_lost: draw_simple_at 14, "LOST  "
-
-_draw_charset_opt:
-		ldx WRAM_CharSet
-		beq @native
-		dex
-		beq @org
-		jmp _char_lost
-@org:
-		jmp _char_org
-@native:
-		jmp _char_native
-		
-_char_fds: draw_simple_at 15, "FDS"
-_char_nes: draw_simple_at 15, "NES"
-
-_draw_minusworld_opt:
-		lda WRAM_MinusWorld
-		beq @fds
-		jmp _char_nes
-@fds:
-		jmp _char_fds
+		draw_hexopt_at 11, 0
 
 _draw_button_restart_opt:
 		lda WRAM_RestartButtons
-		draw_button_opt 16
+		draw_button_opt 12
 
 _draw_button_title_opt:
 		lda WRAM_TitleButtons
-		draw_button_opt 17
+		draw_button_opt 13
 
 _draw_button_save_opt:
 		lda WRAM_SaveButtons
-		draw_button_opt 18
+		draw_button_opt 14
 
 _draw_button_load_opt:
 		lda WRAM_LoadButtons
-		draw_button_opt 19
-
-_draw_reset_records_opt:
-		draw_simple_at 20, "NO ORG LL EXT"
+		draw_button_opt 15
 
 _draw_reset_wram_opt:
-		draw_simple_at 21, "NO YES"
+		draw_simple_at 16, "NO YES"
 
 
 settings_renderers:
@@ -251,17 +198,12 @@ settings_renderers:
 		.word _draw_sound_opt
 		.word _draw_user0org_opt
 		.word _draw_user1org_opt
-		.word _draw_user0lost_opt
-		.word _draw_user1lost_opt
 		.word _draw_userdelay_opt
 		.word _draw_savedelay_opt
-		.word _draw_charset_opt
-		.word _draw_minusworld_opt
 		.word _draw_button_restart_opt
 		.word _draw_button_title_opt
 		.word _draw_button_save_opt
 		.word _draw_button_load_opt
-		.word _draw_reset_records_opt
 		.word _draw_reset_wram_opt
 
 redraw_setting:
@@ -341,14 +283,9 @@ _select_value:
 		jmp set_selection_sprites
 
 _select_charset:
-		ldx #6
+		ldx #4
 		lda WRAM_CharSet
 		beq @draw
-		cmp #1
-		beq @draw_org
-		ldx #4
-		jmp set_selection_sprites
-@draw_org:
 		ldx #3
 @draw:
 		jmp set_selection_sprites
@@ -390,17 +327,6 @@ _select_reset_wram:
 @no:
 		jmp set_selection_sprites
 
-_select_reset_records:
-		; NO ORG LL EXT
-		jsr get_setting_idx
-		txa
-		ldx #2
-		and #1
-		beq @is_two
-		inx
-@is_two:
-		jmp set_selection_sprites
-
 select_option:
 		.word _select_music
 		.word _select_sound
@@ -408,15 +334,10 @@ select_option:
 		.word _select_value
 		.word _select_value
 		.word _select_value
-		.word _select_value
-		.word _select_value
-		.word _select_charset
-		.word _select_minusworld
 		.word _select_retry_buttons
 		.word _select_title_buttons
 		.word _select_save_buttons
 		.word _select_load_buttons
-		.word _select_reset_records
 		.word _select_reset_wram
 
 selection_changed:
@@ -450,7 +371,7 @@ enter_settings:
 		sta SND_MASTERCTRL_REG
 		write_nt "settings_data"
 		ldx #0
-		lda #0
+		lda #$ff
 @nuke_sprites:
 		sta $200, x
 		inx
@@ -624,28 +545,6 @@ _savedelay_input:
 		sta $01
 		jmp byte_input
 
-_charset_input:
-		and #(B_Button|A_Button)
-		beq @nothing
-		ldx WRAM_CharSet
-		inx
-		cpx #3
-		bne @save
-		ldx #0
-@save:
-		stx WRAM_CharSet
-@nothing:
-		rts
-
-_minusworld_input:
-		and #(B_Button|A_Button)
-		beq @nothing
-		lda WRAM_MinusWorld
-		eor #1
-		sta WRAM_MinusWorld
-@nothing:
-		rts
-
 recordbuttons_input:
 		ldx RECORD_BUTTONS
 		beq @normalinput
@@ -731,74 +630,6 @@ get_setting_idx:
 @done:
 		rts
 
-ResetRecords:
-		jsr get_setting_idx
-		beq @nope
-		dex
-		bne @not_org
-		lda #<WRAM_OrgTimes
-		sta $00
-		lda #>WRAM_OrgTimes
-		sta $01
-		ldx #(WRAM_OrgTimesEnd-WRAM_OrgTimes)
-		bne @memset
-@not_org:
-		dex
-		bne @not_ll
-		lda #<WRAM_LostTimes
-		sta $00
-		lda #>WRAM_LostTimes
-		sta $01
-		ldx #(WRAM_LostTimesEnd-WRAM_LostTimes)
-		bne @memset
-@not_ll:
-		dex
-		bne @nope ; this is fucked
-		lda #<WRAM_ExtTimes
-		sta $00
-		lda #>WRAM_ExtTimes
-		sta $01
-		ldx #(WRAM_ExtTimesEnd-WRAM_ExtTimes)
-@memset:
-		ldy #0
-		lda #0
-@memset_next:
-		sta ($00),y
-		iny
-		dex
-		bne @memset_next
-		pla
-		pla ; Ghetto. We should have the intro properly copy data to the screen :()
-@nope:
-		rts
-
-_reset_records_input:
-		lda SavedJoypadBits
-		and #(Left_Dir|Right_Dir)
-		beq @checkab
-		jsr get_setting_idx
-		cmp #Left_Dir
-		bne @not_left
-		dex
-		bpl @set_selection
-		ldx #3
-		bne @set_selection ; jmp
-@not_left:
-		inx
-		cpx #4
-		bne @set_selection
-		ldx #0
-@set_selection:
-		lda records_offsets, x
-		sta SETTINGS_X
-@done:
-		rts
-@checkab:
-		lda SavedJoypadBits
-		and #(B_Button|A_Button)
-		beq @done
-		jmp ResetRecords
-
 _reset_wram_input:
 		lda SavedJoypadBits
 		and #(Left_Dir|Right_Dir)
@@ -824,17 +655,12 @@ option_inputs:
 		.word _sound_input
 		.word _user_input
 		.word _user_input
-		.word _user_input
-		.word _user_input
 		.word _drawdelay_input
 		.word _savedelay_input
-		.word _charset_input
-		.word _minusworld_input
 		.word _retrybuttons_input
 		.word _titlebuttons_input
 		.word _savebuttons_input
 		.word _loadbuttons_input
-		.word _reset_records_input
 		.word _reset_wram_input
 
 dispatch_input:

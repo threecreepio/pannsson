@@ -4,7 +4,7 @@
 CustomRow = WRAM_Temp+$10
 
 .define MENU_ROW_LENGTH 16
-.define MENU_ROW_COUNT 16
+.define MENU_ROW_COUNT 15
 
 pm_empty_row:
 	.byte "                "
@@ -102,11 +102,6 @@ _draw_pm_row_2:
 		rts
 
 _draw_pm_row_3:
-		lda WRAM_IsContraMode
-		beq @checkplayer
-		row_render_data $20E0, pm_hero_peach_row
-		rts
-@checkplayer:
 		row_render_data $20E0, pm_hero_mario_row
 		lda CurrentPlayer
 		beq @is_mario
@@ -169,47 +164,33 @@ _draw_pm_row_6:
 		rts
 
 _draw_pm_row_7:
-		lda BANK_SELECTED
-		cmp #BANK_ORG
-		beq @is_org
-		lda WRAM_LostUser0
-		ldx WRAM_LostUser0+1
-		jmp @save
-@is_org:
-		lda WRAM_OrgUser0
-		ldx WRAM_OrgUser0+1
+		lda WRAM_NipponUser0
+		ldx WRAM_NipponUser0+1
 @save:
 		sta $00
 		stx $01
-		lda #$21 ; X
+		lda #$0A ; A
 		sta $02
 		jsr copy_user_row
 		row_render_data $2160, CustomRow
 		rts
 
 _draw_pm_row_8:
-		row_render_data $23D8, pm_attr_data
-		inc $07
-		jsr draw_prepared_row
-		lda BANK_SELECTED
-		cmp #BANK_ORG
-		beq @is_org
-		lda WRAM_LostUser1
-		ldx WRAM_LostUser1+1
-		jmp @save
-@is_org:
-		lda WRAM_OrgUser1
-		ldx WRAM_OrgUser1+1
+		lda WRAM_NipponUser1
+		ldx WRAM_NipponUser1+1
 @save:
 		sta $00
 		stx $01
-		lda #$22 ; Y
+		lda #$0B ; B
 		sta $02
 		jsr copy_user_row
 		row_render_data $2180, CustomRow
 		rts
 
 _draw_pm_row_10:
+		row_render_data $23D8, pm_attr_data
+		inc $07
+		jsr draw_prepared_row
 		row_render_data $21A0, pm_star_row
 		rts
 
@@ -270,11 +251,8 @@ prepare_draw_row:
 
 draw_prepared_row:
 		lda $00
-	pha
+		pha
 		lda Mirror_PPU_CTRL_REG1
-		ldx BANK_SELECTED
-		cpx #BANK_ORG
-		beq @okok
         lda UseNtBase2400
 @okok:
 		and #3
@@ -284,7 +262,7 @@ draw_prepared_row:
 		sta $01
 @ntbase_selected:
 		lda $01
-	pha
+		pha
 		lda HorizontalScroll
 		lsr
 		lsr
@@ -352,10 +330,10 @@ draw_prepared_row:
 		sbc $05
 		sta $06
 @all_on_next:
-	pla
+		pla
 		eor #$04
 		sta $01
-	pla
+		pla
 		sta $00
 		lda $06
 		beq @done
@@ -511,7 +489,7 @@ pm_toggle_info:
 		sta VRAM_Buffer1+1,x
 		lda #$01 ; len
 		sta VRAM_Buffer1+2,x
-		lda WRAM_EntrySockTimer
+		lda WRAM_AreaSockTimer
 		sta VRAM_Buffer1+3, x
 		lda #$00
 		sta VRAM_Buffer1+4, x
@@ -543,9 +521,9 @@ pm_toggle_input:
 		sta VRAM_Buffer1+6, x
 		sta VRAM_Buffer1+7, x
 		sta VRAM_Buffer1+9, x
-		lda #$21 ; X
+		lda #$0a ; A
 		sta VRAM_Buffer1+4, x
-		lda #$22 ; Y
+		lda #$0b ; B
 		sta VRAM_Buffer1+8, x
 		lda #$00
 		sta VRAM_Buffer1+10, x
@@ -637,27 +615,14 @@ pause_menu_activate:
 
 get_user_selected:
 		ldx WRAM_MenuIndex
-		lda BANK_SELECTED
-		cmp #BANK_ORG
-		beq @is_org
-		cpx #6
-		bne @is_0
-		lda #<WRAM_LostUser0
-		ldx #>WRAM_LostUser0
-		jmp @save
-@is_0:
-		lda #<WRAM_LostUser1
-		ldx #>WRAM_LostUser1
-		jmp @save
-@is_org:
 		cpx #6
 		beq @is_org_0
-		lda #<WRAM_OrgUser1
-		ldx #>WRAM_OrgUser1
+		lda #<WRAM_NipponUser1
+		ldx #>WRAM_NipponUser1
 		jmp @save
 @is_org_0:
-		lda #<WRAM_OrgUser0
-		ldx #>WRAM_OrgUser0
+		lda #<WRAM_NipponUser0
+		ldx #>WRAM_NipponUser0
 @save:
 		sta $00
 		stx $01

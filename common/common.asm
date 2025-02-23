@@ -19,26 +19,22 @@ Start:	; Dummy
 NonMaskableInterrupt: ; Dummy
 
 	.include "utils.inc"
-	.include "sound.asm"
 	.include "sound-ll.asm"
 	.include "game.asm"
 	.include "pausemenu.asm"
 	.include "practice.asm"
 
-	.export EndOfCastle
-	.export RenderIntermediateTime
-	.export FrameToTime
 	.export PracticeInit
 	.export InitializeWRAM
 	.export ForceUpdateSockHash
 	.export PracticeOnFrame
 	.export PracticeTitleMenu
-	.export SoundEngineExternal
 	.export ProcessLevelLoad
 	.export LoadPhysicsData
 	.export LoadMarioPhysics
 	.export RedrawUserVars
 	.export RedrawAll
+	.export HideRemainingFrames
 	.export UpdateFrameRule
 	.export WritePracticeTop
 	.export RedrawFrameNumbers
@@ -47,5 +43,4 @@ NonMaskableInterrupt: ; Dummy
 	.export FactoryResetWRAM
 	.export UpdateGameTimer
 
-practice_callgate
-control_bank
+.res $C000 - *, $FF
