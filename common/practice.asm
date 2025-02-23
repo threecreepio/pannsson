@@ -849,6 +849,8 @@ begin_save:
 		inc DisableScreenFlag
 		lda WRAM_DelaySaveFrames
 		sta WRAM_SaveFramesLeft
+		lda IRQUpdateFlag
+		sta WRAM_IRQUpdateFlag
 		lda #0
 		sta IRQUpdateFlag
 		sta SND_MASTERCTRL_REG
@@ -1127,7 +1129,8 @@ LoadState:
 		sta WRAM_PracticeFlags
 		lda #0
 		sta DisableScreenFlag
-		inc IRQUpdateFlag
+		lda WRAM_IRQUpdateFlag
+		sta IRQUpdateFlag
 		; Controllers will be read again this frame. Reset them (very buggy otherwise ;)).
 		sta SavedJoypad1Bits
 		sta JoypadBitMask
@@ -1232,7 +1235,8 @@ SaveState:
 		sta WRAM_PracticeFlags
 		lda #0
 		sta DisableScreenFlag
-		inc IRQUpdateFlag
+		lda WRAM_IRQUpdateFlag
+		sta IRQUpdateFlag
 		rts
 
 
