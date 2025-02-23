@@ -85,6 +85,3 @@ First download the desired version below:
 Then simply apply that BPS (using for instance Floating Lunar IPS) to the an original, unmodified version of the All Night Nippon Super Mario Bros. The MD5 checksum for the ROM you should be using is `c8719692d0b9d9649492ffb1c2d26aa3`.
 
 Have fun!
-
-## Credits
-Sprites for peach shamelessly stolen from [Super Mario Bros.: Peach Edition](https://www.romhacking.net/hacks/1229)
