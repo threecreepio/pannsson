@@ -695,21 +695,43 @@ WriteRulePointer:
 		cpx #$01
 		beq @is_luigi
 @is_mario:
+		ldx PowerUps
+		cpx #$02
+		bcc @is_fire_m
 		clc
-		adc #<WRAM_LostRules
+		adc #<WRAM_NipponRules
 		sta $04
 		lda #0
-		adc #>WRAM_LostRules
+		adc #>WRAM_NipponRules
+		sta $05
+		rts
+@is_fire_m:
+		clc
+		adc #<WRAM_Fire_NipponRules
+		sta $04
+		lda #0
+		adc #>WRAM_Fire_NipponRules
 		sta $05
 		rts
 @is_luigi:
+		ldx PowerUps
+		cpx #$02
+		bcc @is_fire_l
 		clc
-		adc #<WRAM_LostRules_L
+		adc #<WRAM_NipponRules_L
 		sta $04
 		lda #0
-		adc #>WRAM_LostRules_L
+		adc #>WRAM_NipponRules_L
 		sta $05
 		rts
+@is_fire_l:
+		clc
+		adc #<WRAM_Fire_NipponRules_L
+		sta $04
+		lda #0
+		adc #>WRAM_Fire_NipponRules_L
+		sta $05
+		rts	
 
 toggle_second_quest:
 		lda PrimaryHardMode
@@ -848,7 +870,7 @@ begin_save:
 		sta WRAM_PracticeFlags
 		inc DisableScreenFlag
 		lda WRAM_DelaySaveFrames
-		sta WRAM_SaveFramesLeft
+		sta SaveFramesLeft
 		lda IRQUpdateFlag
 		sta WRAM_IRQUpdateFlag
 		lda #0
@@ -868,7 +890,7 @@ begin_load:
 		sta WRAM_PracticeFlags
 		inc DisableScreenFlag
 		lda WRAM_DelaySaveFrames
-		sta WRAM_SaveFramesLeft
+		sta SaveFramesLeft
 		lda #$00
 		sta IRQUpdateFlag
 		sta SND_MASTERCTRL_REG
@@ -1019,7 +1041,7 @@ ForceUpdateSockHash:
 		jmp ReturnBank
 
 LoadState:
-		dec WRAM_SaveFramesLeft
+		dec SaveFramesLeft
 		beq @do_loadstate
 		lda GamePauseStatus
 		ora #02
@@ -1137,7 +1159,7 @@ LoadState:
 		rts
 
 SaveState:
-		dec WRAM_SaveFramesLeft
+		dec SaveFramesLeft
 		beq @do_savestate
 		lda GamePauseStatus
 		ora #02
@@ -1262,7 +1284,7 @@ SaveState:
 .endmacro
 
 noredraw_dec:
-		dec WRAM_UserFramesLeft
+		dec UserFramesLeft
 noredraw:
 		jmp UpdateStatusInput
 hide:
@@ -1271,7 +1293,7 @@ hide:
 		jmp terminate
 		
 RedrawUserVars:
-		lda WRAM_UserFramesLeft
+		lda UserFramesLeft
 		bne noredraw_dec
 		ldy VRAM_Buffer1_Offset
 		bne noredraw
@@ -1291,7 +1313,7 @@ RedrawUserVars:
 terminate:
 		sty VRAM_Buffer1+$0A
 		lda WRAM_DelayUserFrames
-		sta WRAM_UserFramesLeft
+		sta UserFramesLeft
 		
 UpdateStatusInput:
     lda WRAM_PracticeFlags

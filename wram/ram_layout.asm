@@ -103,7 +103,7 @@ WRAM_OrgRules:
 	.dword 0, 0, 0, 0 ; World 8
 	.dword 0, 0, 0, 0 ; World 9 (Minus World)
 
-WRAM_LostRules:
+WRAM_Fire_NipponRules:
 	.dword 0, 0, 0, 0 ; World 1
 	.dword 0, 0, 0, 0 ; World 2
 	.dword 0, 0, 0, 0 ; World 3
@@ -118,7 +118,7 @@ WRAM_LostRules:
 	.dword 0, 0, 0, 0 ; World C
 	.dword 0, 0, 0, 0 ; World D
 	
-WRAM_LostRules_L:
+WRAM_Fire_NipponRules_L:
 	.dword 0, 0, 0, 0 ; World 1
 	.dword 0, 0, 0, 0 ; World 2
 	.dword 0, 0, 0, 0 ; World 3
